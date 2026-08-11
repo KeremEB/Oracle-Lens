@@ -3,6 +3,7 @@ import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
 import { IPC_CHANNELS } from '../shared/ipc';
+import type { SkinRarity } from '../shared/types/lol';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -17,6 +18,10 @@ ipcMain.handle(IPC_CHANNELS.lol.rankedSummary, () => lolProvider.getRankedSummar
 ipcMain.handle(IPC_CHANNELS.lol.championMasteries, () => lolProvider.getChampionMasteries());
 ipcMain.handle(IPC_CHANNELS.lol.masteryCrestUrl, (_event, level: number) =>
   lolProvider.getMasteryCrestUrl(level),
+);
+ipcMain.handle(IPC_CHANNELS.lol.ownedSkins, () => lolProvider.getOwnedSkins());
+ipcMain.handle(IPC_CHANNELS.lol.rarityGemUrl, (_event, rarity: SkinRarity) =>
+  lolProvider.getRarityGemUrl(rarity),
 );
 
 lolProvider.onStatusChange((status) => {

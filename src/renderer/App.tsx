@@ -5,6 +5,7 @@ import { useLolResource } from './core/useLolResource';
 import { AccountSummaryCard } from './games/lol/AccountSummaryCard';
 import { RankedSummarySection } from './games/lol/RankedSummarySection';
 import { ChampionsSection } from './games/lol/ChampionsSection';
+import { SkinsSection } from './games/lol/SkinsSection';
 
 export default function App() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('unavailable');
@@ -31,6 +32,7 @@ export default function App() {
   const champions = useLolResource(connectionState, () =>
     window.oracleLens.lol.getChampionMasteries(),
   );
+  const skins = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedSkins());
 
   return (
     <div className="h-screen w-screen overflow-y-auto bg-neutral-900 text-neutral-100">
@@ -64,6 +66,14 @@ export default function App() {
           <p className="text-neutral-400">{t('champions.loading')}</p>
         )}
         {champions.data && <ChampionsSection champions={champions.data} />}
+
+        {connectionState === 'connected' && skins.error && (
+          <p className="text-red-400">{skins.error}</p>
+        )}
+        {connectionState === 'connected' && !skins.error && !skins.data && (
+          <p className="text-neutral-400">{t('skins.loading')}</p>
+        )}
+        {skins.data && <SkinsSection skins={skins.data} />}
       </div>
     </div>
   );

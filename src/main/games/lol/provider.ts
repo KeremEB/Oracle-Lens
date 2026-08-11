@@ -5,16 +5,24 @@ import type {
   GameCapability,
   GameProvider,
 } from '../../../shared/types/core';
-import type { AccountSummary, ChampionMasteryEntry, RankedSummary } from '../../../shared/types/lol';
+import type {
+  AccountSummary,
+  ChampionMasteryEntry,
+  OwnedSkin,
+  RankedSummary,
+  SkinRarity,
+} from '../../../shared/types/lol';
 import { getCurrentSummoner } from './endpoints/summoner';
 import { getHonorProfile } from './endpoints/honor';
 import { getRegionLocale } from './endpoints/region';
 import { getCurrentRankedStats } from './endpoints/ranked';
 import { getChampionMasteryList } from './endpoints/championMastery';
+import { getSkinsMinimal } from './endpoints/skins';
 import { mapAccountSummary } from './mappers/accountSummary';
 import { mapRankedSummary } from './mappers/rankedSummary';
 import { mapChampionMasteries } from './mappers/championMastery';
-import { getMasteryCrestDataUrl } from '../../core/cdn/lol';
+import { mapOwnedSkins } from './mappers/skins';
+import { getMasteryCrestDataUrl, getRarityGemDataUrl } from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -28,13 +36,13 @@ function errorMessage(err: unknown): string {
  * or stored beyond the request, `league-connect` only reads the lockfile
  * Riot already writes to disk.
  *
- * Skins/chromas/collectibles/... are not implemented yet; only the declared
+ * Chromas/collectibles/... are not implemented yet; only the declared
  * capabilities reflect what the UI can actually render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
   readonly displayName = 'League of Legends';
-  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked', 'champions'];
+  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked', 'champions', 'skins'];
 
   private status: ConnectionStatus = { state: 'unavailable' };
   private readonly listeners = new Set<ConnectionListener>();
@@ -139,6 +147,21 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
   async getMasteryCrestUrl(level: number): Promise<string | null> {
     return getMasteryCrestDataUrl(level);
+  }
+
+  async getOwnedSkins(): Promise<OwnedSkin[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+    const credentials = this.credentials;
+
+    const summoner = await getCurrentSummoner(credentials);
+    const raw = await getSkinsMinimal(credentials, summoner.summonerId);
+    return mapOwnedSkins(raw);
+  }
+
+  async getRarityGemUrl(rarity: SkinRarity): Promise<string | null> {
+    return getRarityGemDataUrl(rarity);
   }
 
   private setStatus(status: ConnectionStatus): void {

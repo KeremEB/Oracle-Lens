@@ -8,5 +8,7 @@ export const IPC_CHANNELS = {
     rankedSummary: 'lol:rankedSummary',
     championMasteries: 'lol:championMasteries',
     masteryCrestUrl: 'lol:masteryCrestUrl',
+    ownedSkins: 'lol:ownedSkins',
+    rarityGemUrl: 'lol:rarityGemUrl',
   },
 } as const;
