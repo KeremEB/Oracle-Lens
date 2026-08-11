@@ -1,7 +1,13 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
+import { ConnectionManager, ProviderRegistry } from './core/connection';
+import { LeagueOfLegendsProvider } from './games/lol/provider';
 
 const isDev = process.env.NODE_ENV === 'development';
+
+const registry = new ProviderRegistry();
+registry.register(new LeagueOfLegendsProvider());
+const connectionManager = new ConnectionManager(registry);
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -23,7 +29,10 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  connectionManager.start();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -35,4 +44,8 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+app.on('before-quit', () => {
+  connectionManager.stop();
 });

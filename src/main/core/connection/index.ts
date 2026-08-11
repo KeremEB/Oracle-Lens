@@ -1,2 +1,2 @@
-// Provider registry, lifecycle, and connection state machine (game-agnostic).
-export {};
+export { ProviderRegistry } from './registry';
+export { ConnectionManager } from './manager';
