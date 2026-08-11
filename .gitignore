@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+*.log
+npm-debug.log*
+
+.env
+.env.local
+
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/extensions.json
+.idea/
