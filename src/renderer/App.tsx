@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import type { ConnectionState } from '../shared/types/core';
-import type { AccountSummary } from '../shared/types/lol';
+import type { AccountSummary, RankedSummary } from '../shared/types/lol';
 import { t } from './core/i18n';
+import { AccountSummaryCard } from './games/lol/AccountSummaryCard';
+import { RankedSummarySection } from './games/lol/RankedSummarySection';
 
 export default function App() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('unavailable');
   const [summary, setSummary] = useState<AccountSummary | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [ranked, setRanked] = useState<RankedSummary | null>(null);
+  const [rankedError, setRankedError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -19,6 +23,7 @@ export default function App() {
       setConnectionState(status.state);
       if (status.state !== 'connected') {
         setSummary(null);
+        setRanked(null);
       }
     });
 
@@ -32,7 +37,7 @@ export default function App() {
     if (connectionState !== 'connected') return;
 
     let cancelled = false;
-    setError(null);
+    setSummaryError(null);
 
     window.oracleLens.lol
       .getAccountSummary()
@@ -40,7 +45,27 @@ export default function App() {
         if (!cancelled) setSummary(data);
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setSummaryError(err instanceof Error ? err.message : String(err));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connectionState]);
+
+  useEffect(() => {
+    if (connectionState !== 'connected') return;
+
+    let cancelled = false;
+    setRankedError(null);
+
+    window.oracleLens.lol
+      .getRankedSummary()
+      .then((data) => {
+        if (!cancelled) setRanked(data);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setRankedError(err instanceof Error ? err.message : String(err));
       });
 
     return () => {
@@ -50,42 +75,32 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-neutral-900 text-neutral-100">
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-4">
         <h1 className="text-3xl font-semibold tracking-wide">Oracle Lens</h1>
 
         {connectionState !== 'connected' && (
           <p className="text-neutral-400">{t('accountSummary.waiting')}</p>
         )}
 
-        {connectionState === 'connected' && error && (
-          <p className="text-red-400">{error}</p>
+        {connectionState === 'connected' && summaryError && (
+          <p className="text-red-400">{summaryError}</p>
         )}
 
-        {connectionState === 'connected' && !error && !summary && (
+        {connectionState === 'connected' && !summaryError && !summary && (
           <p className="text-neutral-400">{t('accountSummary.loading')}</p>
         )}
 
-        {summary && (
-          <dl className="mt-2 grid grid-cols-[auto_auto] gap-x-6 gap-y-1 text-left">
-            <dt className="text-neutral-400">{t('accountSummary.summonerName')}</dt>
-            <dd>{summary.summonerName}</dd>
+        {summary && <AccountSummaryCard summary={summary} />}
 
-            <dt className="text-neutral-400">{t('accountSummary.accountLevel')}</dt>
-            <dd>{summary.accountLevel}</dd>
-
-            <dt className="text-neutral-400">{t('accountSummary.region')}</dt>
-            <dd>{summary.region}</dd>
-
-            <dt className="text-neutral-400">{t('accountSummary.profileIconId')}</dt>
-            <dd>{summary.profileIconId}</dd>
-
-            <dt className="text-neutral-400">{t('accountSummary.honorLevel')}</dt>
-            <dd>{summary.honorLevel}</dd>
-
-            <dt className="text-neutral-400">{t('accountSummary.honorCheckpoint')}</dt>
-            <dd>{summary.honorCheckpoint}</dd>
-          </dl>
+        {connectionState === 'connected' && rankedError && (
+          <p className="text-red-400">{rankedError}</p>
         )}
+
+        {connectionState === 'connected' && !rankedError && !ranked && (
+          <p className="text-neutral-400">{t('ranked.loading')}</p>
+        )}
+
+        {ranked && <RankedSummarySection ranked={ranked} />}
       </div>
     </div>
   );

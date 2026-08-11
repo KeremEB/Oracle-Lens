@@ -8,3 +8,24 @@ export interface AccountSummary {
   honorLevel: number;
   honorCheckpoint: number;
 }
+
+// Unranked and provisional (placement games) are normal, distinct states —
+// not errors and not a "ranked with zero stats" fallback.
+export type RankedQueueStatus =
+  | { kind: 'unranked' }
+  | { kind: 'provisional'; gamesPlayed: number }
+  | {
+      kind: 'ranked';
+      tier: string;
+      division: string;
+      leaguePoints: number;
+      wins: number;
+      losses: number;
+      /** 0-100, rounded */
+      winRate: number;
+    };
+
+export interface RankedSummary {
+  soloDuo: RankedQueueStatus;
+  flex: RankedQueueStatus;
+}

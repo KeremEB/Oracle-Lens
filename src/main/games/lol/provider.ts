@@ -5,11 +5,13 @@ import type {
   GameCapability,
   GameProvider,
 } from '../../../shared/types/core';
-import type { AccountSummary } from '../../../shared/types/lol';
+import type { AccountSummary, RankedSummary } from '../../../shared/types/lol';
 import { getCurrentSummoner } from './endpoints/summoner';
 import { getHonorProfile } from './endpoints/honor';
 import { getRegionLocale } from './endpoints/region';
+import { getCurrentRankedStats } from './endpoints/ranked';
 import { mapAccountSummary } from './mappers/accountSummary';
+import { mapRankedSummary } from './mappers/rankedSummary';
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -23,13 +25,13 @@ function errorMessage(err: unknown): string {
  * or stored beyond the request, `league-connect` only reads the lockfile
  * Riot already writes to disk.
  *
- * Ranked/champions/skins/... are not implemented yet; only 'summary' is
- * declared so the UI knows what it can render today.
+ * Champions/skins/... are not implemented yet; only the declared
+ * capabilities reflect what the UI can actually render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
   readonly displayName = 'League of Legends';
-  readonly capabilities: readonly GameCapability[] = ['summary'];
+  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked'];
 
   private status: ConnectionStatus = { state: 'unavailable' };
   private readonly listeners = new Set<ConnectionListener>();
@@ -112,6 +114,15 @@ export class LeagueOfLegendsProvider implements GameProvider {
     ]);
 
     return mapAccountSummary({ summoner, honor, region });
+  }
+
+  async getRankedSummary(): Promise<RankedSummary> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+
+    const raw = await getCurrentRankedStats(this.credentials);
+    return mapRankedSummary(raw);
   }
 
   private setStatus(status: ConnectionStatus): void {

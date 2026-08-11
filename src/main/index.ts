@@ -13,6 +13,7 @@ const connectionManager = new ConnectionManager(registry);
 
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
 ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());
+ipcMain.handle(IPC_CHANNELS.lol.rankedSummary, () => lolProvider.getRankedSummary());
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

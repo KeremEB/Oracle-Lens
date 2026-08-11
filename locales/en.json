@@ -7,5 +7,15 @@
   "accountSummary.region": "Region",
   "accountSummary.profileIconId": "Profile Icon ID",
   "accountSummary.honorLevel": "Honor Level",
-  "accountSummary.honorCheckpoint": "Honor Checkpoint"
+  "accountSummary.honorCheckpoint": "Honor Checkpoint",
+  "ranked.loading": "Loading ranked stats...",
+  "queue.soloDuo": "Solo/Duo",
+  "queue.flex": "Flex",
+  "ranked.unranked": "Unranked",
+  "ranked.provisional": "Provisional — games played",
+  "ranked.rank": "Rank",
+  "ranked.leaguePoints": "LP",
+  "ranked.wins": "Wins",
+  "ranked.losses": "Losses",
+  "ranked.winRate": "Win Rate"
 }
