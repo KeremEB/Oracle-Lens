@@ -15,6 +15,10 @@ const lol: OracleLensBridge['lol'] = {
   getAccountSummary: () => ipcRenderer.invoke(IPC_CHANNELS.lol.accountSummary),
 
   getRankedSummary: () => ipcRenderer.invoke(IPC_CHANNELS.lol.rankedSummary),
+
+  getChampionMasteries: () => ipcRenderer.invoke(IPC_CHANNELS.lol.championMasteries),
+
+  getMasteryCrestUrl: (level) => ipcRenderer.invoke(IPC_CHANNELS.lol.masteryCrestUrl, level),
 };
 
 const oracleLens: OracleLensBridge = { lol };

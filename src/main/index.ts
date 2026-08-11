@@ -14,6 +14,10 @@ const connectionManager = new ConnectionManager(registry);
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
 ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());
 ipcMain.handle(IPC_CHANNELS.lol.rankedSummary, () => lolProvider.getRankedSummary());
+ipcMain.handle(IPC_CHANNELS.lol.championMasteries, () => lolProvider.getChampionMasteries());
+ipcMain.handle(IPC_CHANNELS.lol.masteryCrestUrl, (_event, level: number) =>
+  lolProvider.getMasteryCrestUrl(level),
+);
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

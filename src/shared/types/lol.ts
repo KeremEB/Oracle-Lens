@@ -29,3 +29,14 @@ export interface RankedSummary {
   soloDuo: RankedQueueStatus;
   flex: RankedQueueStatus;
 }
+
+export interface ChampionMasteryEntry {
+  championId: number;
+  championName: string;
+  masteryLevel: number;
+  masteryPoints: number;
+  /** null when the CDN icon couldn't be fetched — render a placeholder. */
+  iconDataUrl: string | null;
+  /** "LoL Classic" alternate-mode variant (e.g. Jade Wukong) — shown separately from the base champion. */
+  isClassicVariant: boolean;
+}

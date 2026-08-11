@@ -6,5 +6,7 @@ export const IPC_CHANNELS = {
     connectionStatusChanged: 'lol:connectionStatusChanged',
     accountSummary: 'lol:accountSummary',
     rankedSummary: 'lol:rankedSummary',
+    championMasteries: 'lol:championMasteries',
+    masteryCrestUrl: 'lol:masteryCrestUrl',
   },
 } as const;

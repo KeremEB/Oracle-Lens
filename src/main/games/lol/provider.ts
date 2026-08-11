@@ -5,13 +5,16 @@ import type {
   GameCapability,
   GameProvider,
 } from '../../../shared/types/core';
-import type { AccountSummary, RankedSummary } from '../../../shared/types/lol';
+import type { AccountSummary, ChampionMasteryEntry, RankedSummary } from '../../../shared/types/lol';
 import { getCurrentSummoner } from './endpoints/summoner';
 import { getHonorProfile } from './endpoints/honor';
 import { getRegionLocale } from './endpoints/region';
 import { getCurrentRankedStats } from './endpoints/ranked';
+import { getChampionMasteryList } from './endpoints/championMastery';
 import { mapAccountSummary } from './mappers/accountSummary';
 import { mapRankedSummary } from './mappers/rankedSummary';
+import { mapChampionMasteries } from './mappers/championMastery';
+import { getMasteryCrestDataUrl } from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -25,13 +28,13 @@ function errorMessage(err: unknown): string {
  * or stored beyond the request, `league-connect` only reads the lockfile
  * Riot already writes to disk.
  *
- * Champions/skins/... are not implemented yet; only the declared
+ * Skins/chromas/collectibles/... are not implemented yet; only the declared
  * capabilities reflect what the UI can actually render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
   readonly displayName = 'League of Legends';
-  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked'];
+  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked', 'champions'];
 
   private status: ConnectionStatus = { state: 'unavailable' };
   private readonly listeners = new Set<ConnectionListener>();
@@ -123,6 +126,19 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
     const raw = await getCurrentRankedStats(this.credentials);
     return mapRankedSummary(raw);
+  }
+
+  async getChampionMasteries(): Promise<ChampionMasteryEntry[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+
+    const raw = await getChampionMasteryList(this.credentials);
+    return mapChampionMasteries(raw);
+  }
+
+  async getMasteryCrestUrl(level: number): Promise<string | null> {
+    return getMasteryCrestDataUrl(level);
   }
 
   private setStatus(status: ConnectionStatus): void {

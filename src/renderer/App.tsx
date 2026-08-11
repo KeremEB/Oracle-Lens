@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { ConnectionState } from '../shared/types/core';
-import type { AccountSummary, RankedSummary } from '../shared/types/lol';
 import { t } from './core/i18n';
+import { useLolResource } from './core/useLolResource';
 import { AccountSummaryCard } from './games/lol/AccountSummaryCard';
 import { RankedSummarySection } from './games/lol/RankedSummarySection';
+import { ChampionsSection } from './games/lol/ChampionsSection';
 
 export default function App() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('unavailable');
-  const [summary, setSummary] = useState<AccountSummary | null>(null);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-  const [ranked, setRanked] = useState<RankedSummary | null>(null);
-  const [rankedError, setRankedError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,10 +18,6 @@ export default function App() {
 
     const unsubscribe = window.oracleLens.lol.onConnectionStatusChange((status) => {
       setConnectionState(status.state);
-      if (status.state !== 'connected') {
-        setSummary(null);
-        setRanked(null);
-      }
     });
 
     return () => {
@@ -33,74 +26,44 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (connectionState !== 'connected') return;
-
-    let cancelled = false;
-    setSummaryError(null);
-
-    window.oracleLens.lol
-      .getAccountSummary()
-      .then((data) => {
-        if (!cancelled) setSummary(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setSummaryError(err instanceof Error ? err.message : String(err));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [connectionState]);
-
-  useEffect(() => {
-    if (connectionState !== 'connected') return;
-
-    let cancelled = false;
-    setRankedError(null);
-
-    window.oracleLens.lol
-      .getRankedSummary()
-      .then((data) => {
-        if (!cancelled) setRanked(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setRankedError(err instanceof Error ? err.message : String(err));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [connectionState]);
+  const summary = useLolResource(connectionState, () => window.oracleLens.lol.getAccountSummary());
+  const ranked = useLolResource(connectionState, () => window.oracleLens.lol.getRankedSummary());
+  const champions = useLolResource(connectionState, () =>
+    window.oracleLens.lol.getChampionMasteries(),
+  );
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-neutral-900 text-neutral-100">
-      <div className="flex flex-col items-center gap-4">
+    <div className="h-screen w-screen overflow-y-auto bg-neutral-900 text-neutral-100">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 p-8">
         <h1 className="text-3xl font-semibold tracking-wide">Oracle Lens</h1>
 
         {connectionState !== 'connected' && (
           <p className="text-neutral-400">{t('accountSummary.waiting')}</p>
         )}
 
-        {connectionState === 'connected' && summaryError && (
-          <p className="text-red-400">{summaryError}</p>
+        {connectionState === 'connected' && summary.error && (
+          <p className="text-red-400">{summary.error}</p>
         )}
-
-        {connectionState === 'connected' && !summaryError && !summary && (
+        {connectionState === 'connected' && !summary.error && !summary.data && (
           <p className="text-neutral-400">{t('accountSummary.loading')}</p>
         )}
+        {summary.data && <AccountSummaryCard summary={summary.data} />}
 
-        {summary && <AccountSummaryCard summary={summary} />}
-
-        {connectionState === 'connected' && rankedError && (
-          <p className="text-red-400">{rankedError}</p>
+        {connectionState === 'connected' && ranked.error && (
+          <p className="text-red-400">{ranked.error}</p>
         )}
-
-        {connectionState === 'connected' && !rankedError && !ranked && (
+        {connectionState === 'connected' && !ranked.error && !ranked.data && (
           <p className="text-neutral-400">{t('ranked.loading')}</p>
         )}
+        {ranked.data && <RankedSummarySection ranked={ranked.data} />}
 
-        {ranked && <RankedSummarySection ranked={ranked} />}
+        {connectionState === 'connected' && champions.error && (
+          <p className="text-red-400">{champions.error}</p>
+        )}
+        {connectionState === 'connected' && !champions.error && !champions.data && (
+          <p className="text-neutral-400">{t('champions.loading')}</p>
+        )}
+        {champions.data && <ChampionsSection champions={champions.data} />}
       </div>
     </div>
   );

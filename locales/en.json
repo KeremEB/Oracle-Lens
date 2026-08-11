@@ -17,5 +17,10 @@
   "ranked.leaguePoints": "LP",
   "ranked.wins": "Wins",
   "ranked.losses": "Losses",
-  "ranked.winRate": "Win Rate"
+  "ranked.winRate": "Win Rate",
+  "champions.title": "Champions",
+  "champions.classicTitle": "LoL Classic",
+  "champions.loading": "Loading champions...",
+  "champions.filterByLevel": "Filter by mastery level",
+  "champions.allLevels": "All levels"
 }
