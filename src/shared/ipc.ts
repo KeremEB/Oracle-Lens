@@ -10,5 +10,9 @@ export const IPC_CHANNELS = {
     masteryCrestUrl: 'lol:masteryCrestUrl',
     ownedSkins: 'lol:ownedSkins',
     rarityGemUrl: 'lol:rarityGemUrl',
+    ownedChromas: 'lol:ownedChromas',
+    ownedWardSkins: 'lol:ownedWardSkins',
+    ownedEmotes: 'lol:ownedEmotes',
+    ownedProfileIcons: 'lol:ownedProfileIcons',
   },
 } as const;

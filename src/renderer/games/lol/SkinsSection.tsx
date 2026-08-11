@@ -23,10 +23,10 @@ export function SkinsSection({ skins }: { skins: OwnedSkin[] }) {
     [skins, rarityFilter, legacyFilter],
   );
 
-  const { standard, classic } = useMemo(
+  const { standard, other } = useMemo(
     () => ({
-      standard: visible.filter((s) => !s.isClassicVariant),
-      classic: visible.filter((s) => s.isClassicVariant),
+      standard: visible.filter((s) => !s.isSpecialMode),
+      other: visible.filter((s) => s.isSpecialMode),
     }),
     [visible],
   );
@@ -84,13 +84,13 @@ export function SkinsSection({ skins }: { skins: OwnedSkin[] }) {
         </div>
       </div>
 
-      {classic.length > 0 && (
+      {other.length > 0 && (
         <div className="w-full">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">
-            {t('skins.classicTitle')}
+            {t('skins.otherTitle')}
           </h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
-            {classic.map((skin) => (
+            {other.map((skin) => (
               <SkinCard key={skin.skinId} skin={skin} />
             ))}
           </div>

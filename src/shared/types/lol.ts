@@ -37,8 +37,13 @@ export interface ChampionMasteryEntry {
   masteryPoints: number;
   /** null when the CDN icon couldn't be fetched — render a placeholder. */
   iconDataUrl: string | null;
-  /** "LoL Classic" alternate-mode variant (e.g. Jade Wukong) — shown separately from the base champion. */
-  isClassicVariant: boolean;
+  /**
+   * Rotating special-mode/event content (championId >= 60000, e.g. the
+   * now-retired "LoL Classic" roster) rather than a normal roster champion —
+   * shown in its own "Other" section since Riot's static catalogs stop
+   * listing it once the event ends.
+   */
+  isSpecialMode: boolean;
 }
 
 // Real rarity tiers, verified against Community Dragon's static skin data.
@@ -83,6 +88,41 @@ export interface OwnedSkin {
   owned: boolean;
   /** null when the CDN tile image couldn't be fetched — render a placeholder. */
   tileDataUrl: string | null;
-  /** "LoL Classic" alternate-mode variant (e.g. Jade Wukong) — shown in its own section. */
-  isClassicVariant: boolean;
+  /** Rotating special-mode/event content — see ChampionMasteryEntry.isSpecialMode. */
+  isSpecialMode: boolean;
+}
+
+export interface OwnedChroma {
+  chromaId: number;
+  name: string;
+  /** Hex colour strings straight from the LCU, e.g. "#FFC948". */
+  colors: string[];
+  /** null when the CDN image couldn't be fetched — render the color swatch alone. */
+  imageDataUrl: string | null;
+}
+
+export interface SkinChromaGroup {
+  skinId: number;
+  skinName: string;
+  chromas: OwnedChroma[];
+}
+
+export interface OwnedWardSkin {
+  wardId: number;
+  name: string;
+  /** null when the CDN image couldn't be fetched — render a placeholder. */
+  imageDataUrl: string | null;
+}
+
+export interface OwnedEmote {
+  emoteId: number;
+  name: string;
+  /** null when the CDN image couldn't be fetched — render a placeholder. */
+  imageDataUrl: string | null;
+}
+
+export interface OwnedProfileIcon {
+  iconId: number;
+  /** null when the CDN image couldn't be fetched — render a placeholder. */
+  imageDataUrl: string | null;
 }

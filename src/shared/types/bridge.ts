@@ -5,8 +5,12 @@ import type { ConnectionStatus } from './core';
 import type {
   AccountSummary,
   ChampionMasteryEntry,
+  OwnedEmote,
+  OwnedProfileIcon,
   OwnedSkin,
+  OwnedWardSkin,
   RankedSummary,
+  SkinChromaGroup,
   SkinRarity,
 } from './lol';
 
@@ -19,6 +23,10 @@ export interface LolBridge {
   getMasteryCrestUrl(level: number): Promise<string | null>;
   getOwnedSkins(): Promise<OwnedSkin[]>;
   getRarityGemUrl(rarity: SkinRarity): Promise<string | null>;
+  getOwnedChromas(): Promise<SkinChromaGroup[]>;
+  getOwnedWardSkins(): Promise<OwnedWardSkin[]>;
+  getOwnedEmotes(): Promise<OwnedEmote[]>;
+  getOwnedProfileIcons(): Promise<OwnedProfileIcon[]>;
 }
 
 export interface OracleLensBridge {

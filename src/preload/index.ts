@@ -23,6 +23,14 @@ const lol: OracleLensBridge['lol'] = {
   getOwnedSkins: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedSkins),
 
   getRarityGemUrl: (rarity) => ipcRenderer.invoke(IPC_CHANNELS.lol.rarityGemUrl, rarity),
+
+  getOwnedChromas: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedChromas),
+
+  getOwnedWardSkins: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedWardSkins),
+
+  getOwnedEmotes: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedEmotes),
+
+  getOwnedProfileIcons: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedProfileIcons),
 };
 
 const oracleLens: OracleLensBridge = { lol };

@@ -9,8 +9,8 @@ export async function mapOwnedSkins(raw: LcuSkinMinimal[]): Promise<OwnedSkin[]>
 
   const skins = await Promise.all(
     owned.map(async (skin): Promise<OwnedSkin> => {
-      // Community Dragon has no entry for "LoL Classic" (6000xxxx) skins, so
-      // those fall back to standard rarity and a placeholder tile.
+      // Community Dragon has no direct entry for rotated-out special-mode
+      // (6000xxxx) skins — getSkinMeta falls back to the normal skin's data.
       const [meta, tileDataUrl, championMeta] = await Promise.all([
         getSkinMeta(skin.id),
         getSkinTileDataUrl(skin.id),
@@ -26,7 +26,7 @@ export async function mapOwnedSkins(raw: LcuSkinMinimal[]): Promise<OwnedSkin[]>
         isLegacy: meta?.isLegacy ?? false,
         owned: skin.ownership.owned,
         tileDataUrl,
-        isClassicVariant: championMeta?.isClassicVariant ?? false,
+        isSpecialMode: championMeta?.isSpecialMode ?? false,
       };
     }),
   );

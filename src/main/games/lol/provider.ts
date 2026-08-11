@@ -8,8 +8,12 @@ import type {
 import type {
   AccountSummary,
   ChampionMasteryEntry,
+  OwnedEmote,
+  OwnedProfileIcon,
   OwnedSkin,
+  OwnedWardSkin,
   RankedSummary,
+  SkinChromaGroup,
   SkinRarity,
 } from '../../../shared/types/lol';
 import { getCurrentSummoner } from './endpoints/summoner';
@@ -17,11 +21,18 @@ import { getHonorProfile } from './endpoints/honor';
 import { getRegionLocale } from './endpoints/region';
 import { getCurrentRankedStats } from './endpoints/ranked';
 import { getChampionMasteryList } from './endpoints/championMastery';
+import { getOwnedChampionsMinimal } from './endpoints/champions';
 import { getSkinsMinimal } from './endpoints/skins';
+import { getWardSkins } from './endpoints/wardSkins';
+import { getEmoteInventory, getProfileIconInventory } from './endpoints/inventory';
 import { mapAccountSummary } from './mappers/accountSummary';
 import { mapRankedSummary } from './mappers/rankedSummary';
-import { mapChampionMasteries } from './mappers/championMastery';
+import { mapOwnedChampions } from './mappers/championMastery';
 import { mapOwnedSkins } from './mappers/skins';
+import { mapOwnedChromas } from './mappers/chromas';
+import { mapOwnedWardSkins } from './mappers/wardSkins';
+import { mapOwnedEmotes } from './mappers/emotes';
+import { mapOwnedProfileIcons } from './mappers/profileIcons';
 import { getMasteryCrestDataUrl, getRarityGemDataUrl } from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
@@ -36,13 +47,20 @@ function errorMessage(err: unknown): string {
  * or stored beyond the request, `league-connect` only reads the lockfile
  * Riot already writes to disk.
  *
- * Chromas/collectibles/... are not implemented yet; only the declared
+ * Value score/search/... are not implemented yet; only the declared
  * capabilities reflect what the UI can actually render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
   readonly displayName = 'League of Legends';
-  readonly capabilities: readonly GameCapability[] = ['summary', 'ranked', 'champions', 'skins'];
+  readonly capabilities: readonly GameCapability[] = [
+    'summary',
+    'ranked',
+    'champions',
+    'skins',
+    'chromas',
+    'collectibles',
+  ];
 
   private status: ConnectionStatus = { state: 'unavailable' };
   private readonly listeners = new Set<ConnectionListener>();
@@ -140,9 +158,13 @@ export class LeagueOfLegendsProvider implements GameProvider {
     if (!this.credentials) {
       throw new Error('League Client is not connected');
     }
+    const credentials = this.credentials;
 
-    const raw = await getChampionMasteryList(this.credentials);
-    return mapChampionMasteries(raw);
+    const [owned, mastery] = await Promise.all([
+      getOwnedChampionsMinimal(credentials),
+      getChampionMasteryList(credentials),
+    ]);
+    return mapOwnedChampions(owned, mastery);
   }
 
   async getMasteryCrestUrl(level: number): Promise<string | null> {
@@ -162,6 +184,46 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
   async getRarityGemUrl(rarity: SkinRarity): Promise<string | null> {
     return getRarityGemDataUrl(rarity);
+  }
+
+  async getOwnedChromas(): Promise<SkinChromaGroup[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+    const credentials = this.credentials;
+
+    const summoner = await getCurrentSummoner(credentials);
+    const skinsMinimal = await getSkinsMinimal(credentials, summoner.summonerId);
+    return mapOwnedChromas(credentials, summoner.summonerId, skinsMinimal);
+  }
+
+  async getOwnedWardSkins(): Promise<OwnedWardSkin[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+    const credentials = this.credentials;
+
+    const summoner = await getCurrentSummoner(credentials);
+    const raw = await getWardSkins(credentials, summoner.summonerId);
+    return mapOwnedWardSkins(raw);
+  }
+
+  async getOwnedEmotes(): Promise<OwnedEmote[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+
+    const raw = await getEmoteInventory(this.credentials);
+    return mapOwnedEmotes(raw);
+  }
+
+  async getOwnedProfileIcons(): Promise<OwnedProfileIcon[]> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+
+    const raw = await getProfileIconInventory(this.credentials);
+    return mapOwnedProfileIcons(raw);
   }
 
   private setStatus(status: ConnectionStatus): void {

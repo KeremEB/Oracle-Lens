@@ -23,6 +23,10 @@ ipcMain.handle(IPC_CHANNELS.lol.ownedSkins, () => lolProvider.getOwnedSkins());
 ipcMain.handle(IPC_CHANNELS.lol.rarityGemUrl, (_event, rarity: SkinRarity) =>
   lolProvider.getRarityGemUrl(rarity),
 );
+ipcMain.handle(IPC_CHANNELS.lol.ownedChromas, () => lolProvider.getOwnedChromas());
+ipcMain.handle(IPC_CHANNELS.lol.ownedWardSkins, () => lolProvider.getOwnedWardSkins());
+ipcMain.handle(IPC_CHANNELS.lol.ownedEmotes, () => lolProvider.getOwnedEmotes());
+ipcMain.handle(IPC_CHANNELS.lol.ownedProfileIcons, () => lolProvider.getOwnedProfileIcons());
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

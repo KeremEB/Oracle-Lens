@@ -21,14 +21,28 @@ async function getLatestVersion(): Promise<string> {
   return versionPromise;
 }
 
+// Rotating special-mode/event content (e.g. the now-retired "LoL Classic"
+// roster: Jade_Wukong = 60062 for base Wukong = 62) uses championId/skinId
+// offset by a fixed amount above the normal range. Riot's static catalogs
+// stop listing this content entirely once the event ends — verified live:
+// the "LoL Classic" roster existed in Data Dragon 16.15.1 and was completely
+// absent from 16.16.1 a single patch later, not just renamed. Detection is
+// therefore by ID range, with a fallback to the base id's data, since a
+// rotated-out id may not be resolvable in the catalog at all anymore.
+const SPECIAL_CHAMPION_ID_OFFSET = 60000;
+const SPECIAL_SKIN_ID_OFFSET = 60000000;
+
+export function isSpecialChampionId(championId: number): boolean {
+  return championId >= SPECIAL_CHAMPION_ID_OFFSET;
+}
+
+function isSpecialSkinId(skinId: number): boolean {
+  return skinId >= SPECIAL_SKIN_ID_OFFSET;
+}
+
 interface DdragonChampion {
   id: string; // e.g. "Aatrox" — also the icon file stem
   name: string;
-  // "Jade_"-prefixed entries (key = 600000 + base championId, e.g. Jade_Wukong
-  // = 60062 for base Wukong = 62) are the "LoL Classic" alternate-mode variant
-  // of a champion, sharing the same display name as the base entry — confirmed
-  // against a live account that owns mastery on both Wukong and Jade_Wukong.
-  isClassicVariant: boolean;
 }
 
 let championsByIdPromise: Promise<Map<number, DdragonChampion>> | undefined;
@@ -48,11 +62,7 @@ async function getChampionsById(): Promise<Map<number, DdragonChampion>> {
 
       const map = new Map<number, DdragonChampion>();
       for (const champion of Object.values(payload.data)) {
-        map.set(Number(champion.key), {
-          id: champion.id,
-          name: champion.name,
-          isClassicVariant: champion.id.startsWith('Jade_'),
-        });
+        map.set(Number(champion.key), { id: champion.id, name: champion.name });
       }
       return map;
     })();
@@ -62,19 +72,34 @@ async function getChampionsById(): Promise<Map<number, DdragonChampion>> {
 
 export interface ChampionMeta {
   name: string;
-  isClassicVariant: boolean;
+  isSpecialMode: boolean;
 }
 
 export async function getChampionMeta(championId: number): Promise<ChampionMeta | undefined> {
   const champions = await getChampionsById();
-  const champion = champions.get(championId);
-  if (!champion) return undefined;
-  return { name: champion.name, isClassicVariant: champion.isClassicVariant };
+
+  const direct = champions.get(championId);
+  if (direct) {
+    return { name: direct.name, isSpecialMode: isSpecialChampionId(championId) };
+  }
+
+  if (isSpecialChampionId(championId)) {
+    const base = champions.get(championId - SPECIAL_CHAMPION_ID_OFFSET);
+    if (base) {
+      return { name: base.name, isSpecialMode: true };
+    }
+  }
+
+  return undefined;
 }
 
 export async function getChampionIconDataUrl(championId: number): Promise<string | null> {
   const champions = await getChampionsById();
-  const champion = champions.get(championId);
+  const champion =
+    champions.get(championId) ??
+    (isSpecialChampionId(championId)
+      ? champions.get(championId - SPECIAL_CHAMPION_ID_OFFSET)
+      : undefined);
   if (!champion) {
     return null;
   }
@@ -82,10 +107,32 @@ export async function getChampionIconDataUrl(championId: number): Promise<string
   try {
     const version = await getLatestVersion();
     const remoteUrl = `${DDRAGON_BASE}/cdn/${version}/img/champion/${champion.id}.png`;
-    return await getCachedAssetDataUrl(`lol/champion-icon/${champion.id}.png`, remoteUrl, 'image/png');
+    return await getCachedAssetDataUrl(`lol/champion-icon/${championId}.png`, remoteUrl, 'image/png');
   } catch (err) {
     console.warn(
       `[cdn] failed to fetch champion icon for ${champion.id}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
+// Champion portrait for the owned-champions list: the LCU's own ownership
+// endpoint already gives a full, correct "/lol-game-data/assets/..." path
+// per champion (squarePortraitPath) — always in sync with what the client
+// actually has, so no Data Dragon lookup needed for this particular list.
+export async function getChampionPortraitDataUrl(
+  championId: number,
+  squarePortraitPath: string,
+): Promise<string | null> {
+  if (!squarePortraitPath) return null;
+
+  try {
+    const remoteUrl = resolveGameDataAssetUrl(squarePortraitPath);
+    return await getCachedAssetDataUrl(`lol/champion-portrait/${championId}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(
+      `[cdn] failed to fetch champion portrait for ${championId}:`,
       err instanceof Error ? err.message : err,
     );
     return null;
@@ -181,7 +228,18 @@ async function getSkinsById(): Promise<Map<number, SkinMeta>> {
 
 export async function getSkinMeta(skinId: number): Promise<SkinMeta | undefined> {
   const skins = await getSkinsById();
-  return skins.get(skinId);
+
+  const direct = skins.get(skinId);
+  if (direct) return direct;
+
+  // "LoL Classic"-style special-mode skin ids (60000000 + normal skin id)
+  // aren't in Community Dragon's catalog at all — fall back to the normal
+  // skin's tile/splash/rarity so the card shows something instead of blank.
+  if (isSpecialSkinId(skinId)) {
+    return skins.get(skinId - SPECIAL_SKIN_ID_OFFSET);
+  }
+
+  return undefined;
 }
 
 export async function getSkinTileDataUrl(skinId: number): Promise<string | null> {
@@ -227,6 +285,132 @@ export async function getRarityGemDataUrl(rarity: SkinRarity): Promise<string | 
     return await getCachedAssetDataUrl(`lol/rarity-gem/${rarity}.png`, remoteUrl, 'image/png');
   } catch (err) {
     console.warn(`[cdn] failed to fetch rarity gem for ${rarity}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+// Chroma images: the LCU's full per-champion skins endpoint already gives a
+// full, correct "/lol-game-data/assets/..." path per chroma (chromaPath) —
+// this was simply never read before. No separate lookup table needed.
+export async function getChromaImageDataUrl(
+  chromaId: number,
+  chromaPath: string,
+): Promise<string | null> {
+  if (!chromaPath) return null;
+
+  try {
+    const remoteUrl = resolveGameDataAssetUrl(chromaPath);
+    return await getCachedAssetDataUrl(`lol/chroma/${chromaId}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(`[cdn] failed to fetch chroma image for ${chromaId}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+// Ward skin images: the LCU already gives a full, correct
+// "/lol-game-data/assets/..." path per ward (no separate lookup table
+// needed), so this just resolves + caches whatever path it's given.
+export async function getWardSkinImageDataUrl(
+  wardId: number,
+  wardImagePath: string,
+): Promise<string | null> {
+  if (!wardImagePath) return null;
+
+  try {
+    const remoteUrl = resolveGameDataAssetUrl(wardImagePath);
+    return await getCachedAssetDataUrl(`lol/ward-skin/${wardId}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(`[cdn] failed to fetch ward skin image for ${wardId}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+interface EmoteMeta {
+  name: string;
+  iconPath: string;
+}
+
+let emotesByIdPromise: Promise<Map<number, EmoteMeta>> | undefined;
+
+async function getEmotesById(): Promise<Map<number, EmoteMeta>> {
+  if (!emotesByIdPromise) {
+    emotesByIdPromise = (async () => {
+      const response = await fetch(
+        'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-emotes.json',
+      );
+      if (!response.ok) {
+        throw new Error(`summoner-emotes.json request failed with status ${response.status}`);
+      }
+
+      const payload = (await response.json()) as Array<{
+        id: number;
+        name: string;
+        inventoryIcon: string;
+      }>;
+
+      const map = new Map<number, EmoteMeta>();
+      for (const emote of payload) {
+        map.set(emote.id, { name: emote.name, iconPath: emote.inventoryIcon });
+      }
+      return map;
+    })();
+  }
+  return emotesByIdPromise;
+}
+
+export async function getEmoteName(emoteId: number): Promise<string | undefined> {
+  const emotes = await getEmotesById();
+  return emotes.get(emoteId)?.name;
+}
+
+export async function getEmoteImageDataUrl(emoteId: number): Promise<string | null> {
+  const emotes = await getEmotesById();
+  const emote = emotes.get(emoteId);
+  if (!emote?.iconPath) return null;
+
+  try {
+    const remoteUrl = resolveGameDataAssetUrl(emote.iconPath);
+    return await getCachedAssetDataUrl(`lol/emote-icon/${emoteId}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(`[cdn] failed to fetch emote icon for ${emoteId}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+let profileIconsByIdPromise: Promise<Map<number, string>> | undefined;
+
+async function getProfileIconsById(): Promise<Map<number, string>> {
+  if (!profileIconsByIdPromise) {
+    profileIconsByIdPromise = (async () => {
+      const response = await fetch(
+        'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons.json',
+      );
+      if (!response.ok) {
+        throw new Error(`profile-icons.json request failed with status ${response.status}`);
+      }
+
+      const payload = (await response.json()) as Array<{ id: number; iconPath?: string }>;
+
+      const map = new Map<number, string>();
+      for (const icon of payload) {
+        if (icon.iconPath) map.set(icon.id, icon.iconPath);
+      }
+      return map;
+    })();
+  }
+  return profileIconsByIdPromise;
+}
+
+export async function getProfileIconImageDataUrl(iconId: number): Promise<string | null> {
+  const icons = await getProfileIconsById();
+  const iconPath = icons.get(iconId);
+  if (!iconPath) return null;
+
+  try {
+    const remoteUrl = resolveGameDataAssetUrl(iconPath);
+    return await getCachedAssetDataUrl(`lol/profile-icon/${iconId}.jpg`, remoteUrl, 'image/jpeg');
+  } catch (err) {
+    console.warn(`[cdn] failed to fetch profile icon for ${iconId}:`, err instanceof Error ? err.message : err);
     return null;
   }
 }

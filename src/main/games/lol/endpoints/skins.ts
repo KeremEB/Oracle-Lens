@@ -28,3 +28,38 @@ export async function getSkinsMinimal(
 
   return response.json<LcuSkinMinimal[]>();
 }
+
+// Shape of GET /lol-champions/v1/inventories/{summonerId}/champions/{championId}/skins
+// — the FULL (non-minimal) skin list for one champion. Unlike skins-minimal,
+// this includes each skin's chromas (with owned colors) — verified live.
+export interface LcuChromaFull {
+  id: number;
+  name: string;
+  colors: string[];
+  chromaPath: string;
+  ownership: { owned: boolean };
+}
+
+export interface LcuChampionSkinFull {
+  id: number;
+  name: string;
+  isBase: boolean;
+  chromas: LcuChromaFull[];
+}
+
+export async function getChampionSkinsFull(
+  credentials: Credentials,
+  summonerId: number,
+  championId: number,
+): Promise<LcuChampionSkinFull[]> {
+  const response = await createHttp1Request(
+    { url: `/lol-champions/v1/inventories/${summonerId}/champions/${championId}/skins`, method: 'GET' },
+    credentials,
+  );
+
+  if (!response.ok) {
+    throw new Error(`champion skins (full) request failed with status ${response.status}`);
+  }
+
+  return response.json<LcuChampionSkinFull[]>();
+}

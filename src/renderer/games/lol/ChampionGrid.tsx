@@ -41,7 +41,7 @@ export function ChampionGrid({
           <option value="all">{t('champions.allLevels')}</option>
           {availableLevels.map((level) => (
             <option key={level} value={level}>
-              {level}
+              {level === 0 ? t('champions.unplayed') : level}
             </option>
           ))}
         </select>
