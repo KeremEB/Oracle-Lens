@@ -1,10 +1,15 @@
-import { authenticate, ClientNotFoundError, LeagueClient } from 'league-connect';
+import { authenticate, ClientNotFoundError, LeagueClient, type Credentials } from 'league-connect';
 import type {
   ConnectionListener,
   ConnectionStatus,
   GameCapability,
   GameProvider,
 } from '../../../shared/types/core';
+import type { AccountSummary } from '../../../shared/types/lol';
+import { getCurrentSummoner } from './endpoints/summoner';
+import { getHonorProfile } from './endpoints/honor';
+import { getRegionLocale } from './endpoints/region';
+import { mapAccountSummary } from './mappers/accountSummary';
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -13,22 +18,23 @@ function errorMessage(err: unknown): string {
 }
 
 /**
- * Connection-only League of Legends provider. Talks to the League Client
- * (LCU) via its lockfile, per the "Local client only" rule — no credentials
- * are ever read or stored, `league-connect` only reads the lockfile Riot
- * already writes to disk.
+ * League of Legends provider. Talks to the League Client (LCU) via its
+ * lockfile, per the "Local client only" rule — no credentials are ever read
+ * or stored beyond the request, `league-connect` only reads the lockfile
+ * Riot already writes to disk.
  *
- * Data fetching (ranked, champions, skins, ...) is intentionally not
- * implemented yet; `capabilities` stays empty until that lands.
+ * Ranked/champions/skins/... are not implemented yet; only 'summary' is
+ * declared so the UI knows what it can render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
   readonly displayName = 'League of Legends';
-  readonly capabilities: readonly GameCapability[] = [];
+  readonly capabilities: readonly GameCapability[] = ['summary'];
 
   private status: ConnectionStatus = { state: 'unavailable' };
   private readonly listeners = new Set<ConnectionListener>();
   private client: LeagueClient | undefined;
+  private credentials: Credentials | undefined;
 
   getStatus(): ConnectionStatus {
     return this.status;
@@ -67,11 +73,13 @@ export class LeagueOfLegendsProvider implements GameProvider {
       client.on('disconnect', () => {
         client.stop();
         this.client = undefined;
+        this.credentials = undefined;
         this.setStatus({ state: 'unavailable' });
       });
 
       client.start();
       this.client = client;
+      this.credentials = credentials;
       this.setStatus({ state: 'connected' });
     } catch (err) {
       this.setStatus({ state: 'error', error: errorMessage(err) });
@@ -81,7 +89,29 @@ export class LeagueOfLegendsProvider implements GameProvider {
   async disconnect(): Promise<void> {
     this.client?.stop();
     this.client = undefined;
+    this.credentials = undefined;
     this.setStatus({ state: 'unavailable' });
+  }
+
+  async getAccountSummary(): Promise<AccountSummary> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+    const credentials = this.credentials;
+
+    const [summoner, honor, region] = await Promise.all([
+      getCurrentSummoner(credentials),
+      getHonorProfile(credentials),
+      getRegionLocale(credentials).catch((err) => {
+        console.warn(
+          '[lol] region-locale request failed, falling back to Unknown:',
+          errorMessage(err),
+        );
+        return undefined;
+      }),
+    ]);
+
+    return mapAccountSummary({ summoner, honor, region });
   }
 
   private setStatus(status: ConnectionStatus): void {

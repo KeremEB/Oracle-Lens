@@ -1,13 +1,24 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
+import { IPC_CHANNELS } from '../shared/ipc';
 
 const isDev = process.env.NODE_ENV === 'development';
 
 const registry = new ProviderRegistry();
-registry.register(new LeagueOfLegendsProvider());
+const lolProvider = new LeagueOfLegendsProvider();
+registry.register(lolProvider);
 const connectionManager = new ConnectionManager(registry);
+
+ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
+ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());
+
+lolProvider.onStatusChange((status) => {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(IPC_CHANNELS.lol.connectionStatusChanged, status);
+  }
+});
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -20,6 +31,10 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  win.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error(`[preload] failed to load ${preloadPath}:`, error);
   });
 
   if (isDev) {

@@ -1,1 +1,11 @@
-{}
+{
+  "accountSummary.waiting": "Waiting for League Client...",
+  "accountSummary.loading": "Loading account summary...",
+  "accountSummary.error": "Could not load account summary",
+  "accountSummary.summonerName": "Summoner",
+  "accountSummary.accountLevel": "Account Level",
+  "accountSummary.region": "Region",
+  "accountSummary.profileIconId": "Profile Icon ID",
+  "accountSummary.honorLevel": "Honor Level",
+  "accountSummary.honorCheckpoint": "Honor Checkpoint"
+}
