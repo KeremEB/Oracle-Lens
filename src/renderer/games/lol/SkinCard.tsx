@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { OwnedSkin } from '../../../shared/types/lol';
+import { t } from '../../core/i18n';
 import { getRarityGemDataUrl } from './rarityGemCache';
 import { rarityLabel } from './rarity';
-import { availabilityBadgeClass, availabilityLabel } from './availability';
 
 export function SkinCard({ skin }: { skin: OwnedSkin }) {
   const [gemUrl, setGemUrl] = useState<string | null>(null);
-  const badgeClass = availabilityBadgeClass(skin.availability);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,9 +45,9 @@ export function SkinCard({ skin }: { skin: OwnedSkin }) {
 
       <span className="w-full truncate text-xs">{skin.name}</span>
 
-      {badgeClass && (
-        <span className={`rounded px-1.5 py-0.5 text-[10px] ${badgeClass}`}>
-          {availabilityLabel(skin.availability)}
+      {skin.isLegacy && (
+        <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-400">
+          {t('skins.legacyBadge')}
         </span>
       )}
     </div>

@@ -2,7 +2,6 @@
 // Defined once here so preload (implementation) and renderer (consumer) can't drift apart.
 
 import type { ConnectionStatus, Preferences } from './core';
-import type { RpPricingTable } from './pricing';
 import type {
   AccountSummary,
   ChampionMasteryEntry,
@@ -18,7 +17,6 @@ import type {
 export interface CoreBridge {
   getPreferences(): Promise<Preferences>;
   setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]): Promise<void>;
-  getRpPricing(): Promise<RpPricingTable>;
 }
 
 export interface LolBridge {

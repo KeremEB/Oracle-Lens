@@ -4,7 +4,6 @@ export const IPC_CHANNELS = {
   core: {
     getPreferences: 'core:getPreferences',
     setPreference: 'core:setPreference',
-    rpPricing: 'core:rpPricing',
   },
   lol: {
     connectionStatus: 'lol:connectionStatus',

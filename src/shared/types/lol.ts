@@ -77,34 +77,6 @@ export function skinRarityRank(rarity: SkinRarity): number {
   return SKIN_RARITY_ORDER.indexOf(rarity);
 }
 
-/**
- * How a skin can be obtained. The LCU has no field for this — its store catalog
- * only describes what is purchasable *right now* — so it is derived from a
- * curated id map plus rarity/legacy defaults (main/games/lol/data).
- */
-export type SkinAvailability =
-  | 'purchasable'
-  | 'legacy'
-  | 'reward'
-  | 'craftable'
-  | 'promotional'
-  | 'unavailable';
-
-/** Drives the availability filter's option order. */
-export const SKIN_AVAILABILITY_ORDER: readonly SkinAvailability[] = [
-  'purchasable',
-  'legacy',
-  'reward',
-  'craftable',
-  'promotional',
-  'unavailable',
-];
-
-/** Only these two are ever assigned an RP price; the rest were never sold for RP. */
-export function isPriceableAvailability(availability: SkinAvailability): boolean {
-  return availability === 'purchasable' || availability === 'legacy';
-}
-
 export interface OwnedSkin {
   skinId: number;
   championId: number;
@@ -118,19 +90,6 @@ export interface OwnedSkin {
   tileDataUrl: string | null;
   /** Rotating special-mode/event content — see ChampionMasteryEntry.isSpecialMode. */
   isSpecialMode: boolean;
-  availability: SkinAvailability;
-  /**
-   * Exact RP price straight from the LCU store catalog. null when the store
-   * carries no RP price for this skin — vaulted legacy content and retired
-   * esports skins both land here, and roughly half a mature account does.
-   */
-  rpCost: number | null;
-  /**
-   * Rarity's standard RP price, filled in only for priceable skins the store
-   * doesn't price. An estimate — never fold it into the exact `rpCost` total.
-   * null when the rarity has no single standard price to fall back on.
-   */
-  estimatedRpCost: number | null;
 }
 
 export interface OwnedChroma {

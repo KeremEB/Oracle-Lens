@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import type { OwnedSkin, SkinAvailability, SkinRarity } from '../../../shared/types/lol';
+import type { OwnedSkin, SkinRarity } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 import { matchesSearch } from '../../core/searchMatch';
 import { allRarities, rarityLabel } from './rarity';
-import { allAvailabilities, availabilityLabel } from './availability';
 import { SkinGrid } from './SkinGrid';
 
 type LegacyFilter = 'all' | 'legacyOnly' | 'nonLegacyOnly';
@@ -11,7 +10,6 @@ type LegacyFilter = 'all' | 'legacyOnly' | 'nonLegacyOnly';
 export function SkinsSection({ skins, searchQuery }: { skins: OwnedSkin[]; searchQuery: string }) {
   const [rarityFilter, setRarityFilter] = useState<SkinRarity | 'all'>('all');
   const [legacyFilter, setLegacyFilter] = useState<LegacyFilter>('all');
-  const [availabilityFilter, setAvailabilityFilter] = useState<SkinAvailability | 'all'>('all');
 
   // Skins arrive already sorted rarest-first from the provider; filtering
   // preserves that order.
@@ -19,12 +17,11 @@ export function SkinsSection({ skins, searchQuery }: { skins: OwnedSkin[]; searc
     () =>
       skins.filter((skin) => {
         if (rarityFilter !== 'all' && skin.rarity !== rarityFilter) return false;
-        if (availabilityFilter !== 'all' && skin.availability !== availabilityFilter) return false;
         if (legacyFilter === 'legacyOnly' && !skin.isLegacy) return false;
         if (legacyFilter === 'nonLegacyOnly' && skin.isLegacy) return false;
         return matchesSearch(skin.name, searchQuery);
       }),
-    [skins, rarityFilter, availabilityFilter, legacyFilter, searchQuery],
+    [skins, rarityFilter, legacyFilter, searchQuery],
   );
 
   const { standard, other } = useMemo(
@@ -59,29 +56,6 @@ export function SkinsSection({ skins, searchQuery }: { skins: OwnedSkin[]; searc
               {allRarities().map((rarity) => (
                 <option key={rarity} value={rarity}>
                   {rarityLabel(rarity)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="skins-availability" className="text-sm text-neutral-400">
-              {t('skins.filterByAvailability')}
-            </label>
-            <select
-              id="skins-availability"
-              className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
-              value={availabilityFilter}
-              onChange={(e) =>
-                setAvailabilityFilter(
-                  e.target.value === 'all' ? 'all' : (e.target.value as SkinAvailability),
-                )
-              }
-            >
-              <option value="all">{t('skins.allAvailabilities')}</option>
-              {allAvailabilities().map((availability) => (
-                <option key={availability} value={availability}>
-                  {availabilityLabel(availability)}
                 </option>
               ))}
             </select>

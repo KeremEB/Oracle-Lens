@@ -8,8 +8,6 @@ const core: OracleLensBridge['core'] = {
 
   setPreference: (key, value) =>
     ipcRenderer.invoke(IPC_CHANNELS.core.setPreference, key, value),
-
-  getRpPricing: () => ipcRenderer.invoke(IPC_CHANNELS.core.rpPricing),
 };
 
 const lol: OracleLensBridge['lol'] = {

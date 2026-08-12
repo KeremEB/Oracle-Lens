@@ -231,11 +231,8 @@ implementations.
 7. **Chromas** — grouped under their skin, rendered with their actual colour palette.
 8. **Collectibles** — ward skins, emotes, profile icons.
 9. **Search** — across champions, skins, and collectibles.
-10. **Value score** — estimated account value from skin rarity and quantity. It is an
-    *estimate*; label it clearly as such. Keep scoring weights in one configurable
-    module, never scattered across components.
-11. **Export** — render the report to PNG and PDF.
-12. **History** — recently viewed snapshots.
+10. **Export** — render the report to PNG and PDF.
+11. **History** — recently viewed snapshots.
 
 ### v2 — Teamfight Tactics
 
