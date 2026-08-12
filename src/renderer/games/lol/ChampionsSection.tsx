@@ -6,12 +6,11 @@ import { ChampionGrid } from './ChampionGrid';
 export function ChampionsSection({
   champions,
   searchQuery,
-  hideFilters = false,
+  levelFilter,
 }: {
   champions: ChampionMasteryEntry[];
   searchQuery: string;
-  /** Suppresses the mastery-level filter — the export report always shows everything. */
-  hideFilters?: boolean;
+  levelFilter: number | 'all';
 }) {
   const { standard, other } = useMemo(
     () => ({
@@ -27,14 +26,14 @@ export function ChampionsSection({
         title={t('champions.title')}
         champions={standard}
         searchQuery={searchQuery}
-        hideFilters={hideFilters}
+        levelFilter={levelFilter}
       />
       {other.length > 0 && (
         <ChampionGrid
           title={t('champions.otherTitle')}
           champions={other}
           searchQuery={searchQuery}
-          hideFilters={hideFilters}
+          levelFilter={levelFilter}
         />
       )}
     </div>

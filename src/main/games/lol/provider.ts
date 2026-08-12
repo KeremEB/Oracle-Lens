@@ -15,6 +15,7 @@ import type {
   RankedSummary,
   SkinChromaGroup,
   SkinRarity,
+  Wallet,
 } from '../../../shared/types/lol';
 import { getCurrentSummoner } from './endpoints/summoner';
 import { getHonorProfile } from './endpoints/honor';
@@ -25,6 +26,9 @@ import { getOwnedChampionsMinimal } from './endpoints/champions';
 import { getSkinsMinimal } from './endpoints/skins';
 import { getWardSkins } from './endpoints/wardSkins';
 import { getEmoteInventory, getProfileIconInventory } from './endpoints/inventory';
+import { getWallet as getWalletRaw } from './endpoints/wallet';
+import { getRsoUserInfo } from './endpoints/rsoAuth';
+import { getAllSeasons } from './endpoints/seasons';
 import { mapAccountSummary } from './mappers/accountSummary';
 import { mapRankedSummary } from './mappers/rankedSummary';
 import { mapOwnedChampions } from './mappers/championMastery';
@@ -33,10 +37,12 @@ import { mapOwnedChromas } from './mappers/chromas';
 import { mapOwnedWardSkins } from './mappers/wardSkins';
 import { mapOwnedEmotes } from './mappers/emotes';
 import { mapOwnedProfileIcons } from './mappers/profileIcons';
+import { mapWallet } from './mappers/wallet';
 import {
   getLevelBorderDataUrl,
   getMasteryCrestDataUrl,
   getProfileIconImageDataUrl,
+  getRankedEmblemDataUrl,
   getRarityGemDataUrl,
 } from '../../core/cdn/lol';
 
@@ -135,7 +141,7 @@ export class LeagueOfLegendsProvider implements GameProvider {
     }
     const credentials = this.credentials;
 
-    const [summoner, honor, region] = await Promise.all([
+    const [summoner, honor, region, rsoUserInfo, seasons] = await Promise.all([
       getCurrentSummoner(credentials),
       getHonorProfile(credentials),
       getRegionLocale(credentials).catch((err) => {
@@ -145,9 +151,20 @@ export class LeagueOfLegendsProvider implements GameProvider {
         );
         return undefined;
       }),
+      // Both are supplementary (country + creation season) — if either
+      // fails, the rest of the summary must still come through; the mapper
+      // just omits those two fields per the "hide missing data" rule.
+      getRsoUserInfo(credentials).catch((err) => {
+        console.warn('[lol] rso userinfo request failed:', errorMessage(err));
+        return undefined;
+      }),
+      getAllSeasons(credentials).catch((err) => {
+        console.warn('[lol] allSeasons request failed:', errorMessage(err));
+        return undefined;
+      }),
     ]);
 
-    return mapAccountSummary({ summoner, honor, region });
+    return mapAccountSummary({ summoner, honor, region, rsoUserInfo, seasons });
   }
 
   async getRankedSummary(): Promise<RankedSummary> {
@@ -237,6 +254,19 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
   async getLevelBorderUrl(accountLevel: number): Promise<string | null> {
     return getLevelBorderDataUrl(accountLevel);
+  }
+
+  async getWallet(): Promise<Wallet> {
+    if (!this.credentials) {
+      throw new Error('League Client is not connected');
+    }
+
+    const raw = await getWalletRaw(this.credentials);
+    return mapWallet(raw);
+  }
+
+  async getRankedEmblemUrl(tier: string): Promise<string | null> {
+    return getRankedEmblemDataUrl(tier);
   }
 
   private setStatus(status: ConnectionStatus): void {

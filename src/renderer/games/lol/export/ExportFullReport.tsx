@@ -65,13 +65,13 @@ export function ExportFullReport({
 
       <div data-export-section="champions" data-export-label={t('champions.title')}>
         <FixedGridDensityProvider minCardWidth={EXPORT_CARD_WIDTH}>
-          <ChampionsSection champions={data.champions} searchQuery="" hideFilters />
+          <ChampionsSection champions={data.champions} searchQuery="" levelFilter="all" />
         </FixedGridDensityProvider>
       </div>
 
       <div data-export-section="skins" data-export-label={t('skins.title')}>
         <FixedGridDensityProvider minCardWidth={EXPORT_CARD_WIDTH}>
-          <SkinsSection skins={data.skins} searchQuery="" hideFilters />
+          <SkinsSection skins={data.skins} searchQuery="" rarityFilter="all" legacyFilter="all" />
         </FixedGridDensityProvider>
       </div>
 

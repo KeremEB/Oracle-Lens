@@ -21,5 +21,7 @@ export const IPC_CHANNELS = {
     ownedProfileIcons: 'lol:ownedProfileIcons',
     profileIconUrl: 'lol:profileIconUrl',
     levelBorderUrl: 'lol:levelBorderUrl',
+    wallet: 'lol:wallet',
+    rankedEmblemUrl: 'lol:rankedEmblemUrl',
   },
 } as const;

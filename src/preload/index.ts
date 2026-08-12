@@ -45,6 +45,10 @@ const lol: OracleLensBridge['lol'] = {
 
   getLevelBorderUrl: (accountLevel) =>
     ipcRenderer.invoke(IPC_CHANNELS.lol.levelBorderUrl, accountLevel),
+
+  getWallet: () => ipcRenderer.invoke(IPC_CHANNELS.lol.wallet),
+
+  getRankedEmblemUrl: (tier) => ipcRenderer.invoke(IPC_CHANNELS.lol.rankedEmblemUrl, tier),
 };
 
 const oracleLens: OracleLensBridge = { core, lol };

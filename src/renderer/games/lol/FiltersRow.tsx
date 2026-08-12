@@ -1,0 +1,120 @@
+import { useMemo } from 'react';
+import type { ChampionMasteryEntry, SkinRarity } from '../../../shared/types/lol';
+import { t } from '../../core/i18n';
+import { allRarities, rarityLabel } from './rarity';
+import type { LegacyFilter } from './SkinsSection';
+import type { LolTabId } from './LolTabId';
+
+const selectClass =
+  'rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100';
+
+// One horizontal row above the content area: search (always present) plus
+// whichever filter controls the active tab actually has. Filter state lives
+// in the shell (LolWorkspace), not in the section components — this is the
+// single place those controls render, so search and a tab's filters always
+// end up on one line instead of stacked rows.
+export function FiltersRow({
+  activeTab,
+  searchQuery,
+  onSearchChange,
+  rarityFilter,
+  onRarityFilterChange,
+  legacyFilter,
+  onLegacyFilterChange,
+  levelFilter,
+  onLevelFilterChange,
+  champions,
+}: {
+  activeTab: LolTabId;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  rarityFilter: SkinRarity | 'all';
+  onRarityFilterChange: (value: SkinRarity | 'all') => void;
+  legacyFilter: LegacyFilter;
+  onLegacyFilterChange: (value: LegacyFilter) => void;
+  levelFilter: number | 'all';
+  onLevelFilterChange: (value: number | 'all') => void;
+  /** Only needed to populate the mastery-level dropdown's options. */
+  champions: ChampionMasteryEntry[] | null;
+}) {
+  const availableLevels = useMemo(
+    () => [...new Set((champions ?? []).map((c) => c.masteryLevel))].sort((a, b) => b - a),
+    [champions],
+  );
+
+  return (
+    <div className="flex flex-wrap items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-6 py-3">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder={t('search.placeholder')}
+        className="w-full max-w-xs rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500"
+      />
+
+      {activeTab === 'champions' && (
+        <div className="flex items-center gap-2">
+          <label htmlFor="champions-level-filter" className="text-sm text-neutral-400">
+            {t('champions.filterByLevel')}
+          </label>
+          <select
+            id="champions-level-filter"
+            className={selectClass}
+            value={levelFilter}
+            onChange={(e) =>
+              onLevelFilterChange(e.target.value === 'all' ? 'all' : Number(e.target.value))
+            }
+          >
+            <option value="all">{t('champions.allLevels')}</option>
+            {availableLevels.map((level) => (
+              <option key={level} value={level}>
+                {level === 0 ? t('champions.unplayed') : level}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {activeTab === 'skins' && (
+        <>
+          <div className="flex items-center gap-2">
+            <label htmlFor="skins-rarity" className="text-sm text-neutral-400">
+              {t('skins.filterByRarity')}
+            </label>
+            <select
+              id="skins-rarity"
+              className={selectClass}
+              value={rarityFilter}
+              onChange={(e) =>
+                onRarityFilterChange(e.target.value === 'all' ? 'all' : (e.target.value as SkinRarity))
+              }
+            >
+              <option value="all">{t('skins.allRarities')}</option>
+              {allRarities().map((rarity) => (
+                <option key={rarity} value={rarity}>
+                  {rarityLabel(rarity)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="skins-legacy" className="text-sm text-neutral-400">
+              {t('skins.filterByLegacy')}
+            </label>
+            <select
+              id="skins-legacy"
+              className={selectClass}
+              value={legacyFilter}
+              onChange={(e) => onLegacyFilterChange(e.target.value as LegacyFilter)}
+            >
+              <option value="all">{t('skins.legacyAll')}</option>
+              <option value="legacyOnly">{t('skins.legacyOnly')}</option>
+              <option value="nonLegacyOnly">{t('skins.legacyExclude')}</option>
+            </select>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

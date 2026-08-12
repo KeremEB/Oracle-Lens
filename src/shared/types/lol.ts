@@ -6,6 +6,15 @@ export interface AccountSummary {
   region: string;
   profileIconId: number;
   honorLevel: number;
+  /** ISO 3166-1 alpha-3 country code the account was opened in, e.g. "TUR". Absent if the LCU didn't provide it. */
+  country?: string;
+  /** Riot's own season number (see /lol-seasons), e.g. 15. Absent if the account's creation date or season boundaries weren't available. */
+  createdSeasonId?: number;
+}
+
+export interface Wallet {
+  riotPoints: number;
+  blueEssence: number;
 }
 
 // Unranked and provisional (placement games) are normal, distinct states —

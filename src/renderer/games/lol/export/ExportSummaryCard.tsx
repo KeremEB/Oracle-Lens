@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import type { AccountSummary, RankedSummary } from '../../../../shared/types/lol';
 import { t } from '../../../core/i18n';
+import { ProfileIconBadge } from '../ProfileIconBadge';
 import { RankedQueueBlock } from '../RankedQueueBlock';
 import { StatTile } from './StatTile';
 import type { CollectionCounts } from './reportData';
@@ -25,29 +25,6 @@ export function ExportSummaryCard({
   counts: CollectionCounts;
   generatedAt: Date;
 }) {
-  const [iconUrl, setIconUrl] = useState<string | null>(null);
-  const [borderUrl, setBorderUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    window.oracleLens.lol.getProfileIconUrl(summary.profileIconId).then((url) => {
-      if (!cancelled) setIconUrl(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [summary.profileIconId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    window.oracleLens.lol.getLevelBorderUrl(summary.accountLevel).then((url) => {
-      if (!cancelled) setBorderUrl(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [summary.accountLevel]);
-
   return (
     <div
       data-export-section="summary"
@@ -63,29 +40,12 @@ export function ExportSummaryCard({
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Border sizing/offset: see AccountSummaryCard's comment — the
-            source art's transparent "hole" is ~36.5% of the canvas and
-            sits ~18px above its vertical center, not full-bleed/centered. */}
-        <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
-          {iconUrl ? (
-            <img
-              src={iconUrl}
-              alt={summary.summonerName}
-              className="-mt-1.5 h-16 w-16 rounded-full object-cover"
-            />
-          ) : (
-            <div className="-mt-1.5 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
-              {summary.summonerName.slice(0, 2).toUpperCase()}
-            </div>
-          )}
-          {borderUrl && (
-            <img
-              src={borderUrl}
-              alt=""
-              className="pointer-events-none absolute inset-0 h-44 w-44 object-contain"
-            />
-          )}
-        </div>
+        <ProfileIconBadge
+          profileIconId={summary.profileIconId}
+          accountLevel={summary.accountLevel}
+          summonerName={summary.summonerName}
+          size={64}
+        />
 
         <div>
           <div className="text-2xl font-semibold">{summary.summonerName}</div>

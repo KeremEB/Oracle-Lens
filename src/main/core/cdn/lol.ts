@@ -415,6 +415,28 @@ export async function getProfileIconImageDataUrl(iconId: number): Promise<string
   }
 }
 
+const RANKED_EMBLEM_BASE =
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem';
+
+// Ranked tier emblems — verified live: iron/bronze/silver/gold/platinum/
+// emerald/diamond/master/grandmaster/challenger all exist at this path.
+// There is no "unranked" emblem in this directory (404) — callers render
+// their own empty/gray placeholder for that state instead of calling this.
+export async function getRankedEmblemDataUrl(tier: string): Promise<string | null> {
+  const normalized = tier.toLowerCase();
+  const remoteUrl = `${RANKED_EMBLEM_BASE}/emblem-${normalized}.png`;
+
+  try {
+    return await getCachedAssetDataUrl(`lol/ranked-emblem/${normalized}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(
+      `[cdn] failed to fetch ranked emblem for ${tier}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
 // Level border frames. There are 21, unlocking at level 1, 30, 50, 75, then
 // every 25 levels up to 500 — verified against two independent community
 // sources (counts and thresholds both match exactly), and the

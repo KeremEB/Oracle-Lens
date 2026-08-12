@@ -48,6 +48,10 @@ ipcMain.handle(IPC_CHANNELS.lol.profileIconUrl, (_event, iconId: number) =>
 ipcMain.handle(IPC_CHANNELS.lol.levelBorderUrl, (_event, accountLevel: number) =>
   lolProvider.getLevelBorderUrl(accountLevel),
 );
+ipcMain.handle(IPC_CHANNELS.lol.wallet, () => lolProvider.getWallet());
+ipcMain.handle(IPC_CHANNELS.lol.rankedEmblemUrl, (_event, tier: string) =>
+  lolProvider.getRankedEmblemUrl(tier),
+);
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

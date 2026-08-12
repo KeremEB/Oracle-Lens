@@ -13,6 +13,7 @@ import type {
   RankedSummary,
   SkinChromaGroup,
   SkinRarity,
+  Wallet,
 } from './lol';
 
 export interface CoreBridge {
@@ -36,6 +37,8 @@ export interface LolBridge {
   getOwnedProfileIcons(): Promise<OwnedProfileIcon[]>;
   getProfileIconUrl(iconId: number): Promise<string | null>;
   getLevelBorderUrl(accountLevel: number): Promise<string | null>;
+  getWallet(): Promise<Wallet>;
+  getRankedEmblemUrl(tier: string): Promise<string | null>;
 }
 
 export interface OracleLensBridge {
