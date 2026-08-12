@@ -6,7 +6,6 @@ export interface AccountSummary {
   region: string;
   profileIconId: number;
   honorLevel: number;
-  honorCheckpoint: number;
 }
 
 // Unranked and provisional (placement games) are normal, distinct states —

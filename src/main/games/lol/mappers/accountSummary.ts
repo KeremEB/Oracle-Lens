@@ -19,6 +19,5 @@ export function mapAccountSummary({ summoner, honor, region }: RawAccountSummary
     region: region?.region ?? 'Unknown',
     profileIconId: summoner.profileIconId,
     honorLevel: honor.honorLevel ?? 0,
-    honorCheckpoint: honor.checkpoint ?? 0,
   };
 }

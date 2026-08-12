@@ -1,4 +1,10 @@
-import html2canvas from 'html2canvas';
+// html2canvas-pro, not html2canvas: Tailwind v4's default palette is defined
+// in oklch(), and stock html2canvas's CSS color parser throws
+// ("unsupported color function oklch") on any computed color that comes back
+// in a modern color-function syntax. html2canvas-pro is a maintained fork
+// whose whole reason to exist is oklch/oklab/lch/lab/color() support — same
+// API, so this is the only line that needed to change.
+import html2canvas from 'html2canvas-pro';
 
 /** Physical-pixel multiplier for captures — 2x for a retina-sharp result. */
 export const CAPTURE_SCALE = 2;

@@ -63,15 +63,18 @@ export function ExportSummaryCard({
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+        {/* Border sizing/offset: see AccountSummaryCard's comment — the
+            source art's transparent "hole" is ~36.5% of the canvas and
+            sits ~18px above its vertical center, not full-bleed/centered. */}
+        <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
           {iconUrl ? (
             <img
               src={iconUrl}
               alt={summary.summonerName}
-              className="h-16 w-16 rounded-full object-cover"
+              className="-mt-1.5 h-16 w-16 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
+            <div className="-mt-1.5 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
               {summary.summonerName.slice(0, 2).toUpperCase()}
             </div>
           )}
@@ -79,7 +82,7 @@ export function ExportSummaryCard({
             <img
               src={borderUrl}
               alt=""
-              className="pointer-events-none absolute inset-0 h-24 w-24 object-contain"
+              className="pointer-events-none absolute inset-0 h-44 w-44 object-contain"
             />
           )}
         </div>

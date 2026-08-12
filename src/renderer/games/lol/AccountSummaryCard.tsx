@@ -28,17 +28,28 @@ export function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Fixed footprint regardless of whether the icon/border load, so a
-          missing border never shifts or breaks the layout. */}
-      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+      {/*
+        Fixed footprint regardless of whether the icon/border load, so a
+        missing border never shifts or breaks the layout.
+
+        The border art (Community Dragon's theme-N-border.png, 512x512) isn't
+        a tight ring — measured across several themes, the transparent hole
+        where the icon shows through is only ~36.5% of the canvas (~187px),
+        centered horizontally but ~18px above the canvas's vertical center
+        (extra ornament hangs below). So the border has to render at ~2.7x
+        the icon's own size for the hole to actually match the icon, and the
+        icon needs a small upward nudge to land in that off-center hole
+        instead of the geometric middle of the frame.
+      */}
+      <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
         {iconUrl ? (
           <img
             src={iconUrl}
             alt={summary.summonerName}
-            className="h-16 w-16 rounded-full object-cover"
+            className="-mt-1.5 h-16 w-16 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
+          <div className="-mt-1.5 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
             {summary.summonerName.slice(0, 2).toUpperCase()}
           </div>
         )}
@@ -47,7 +58,7 @@ export function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
           <img
             src={borderUrl}
             alt=""
-            className="pointer-events-none absolute inset-0 h-24 w-24 object-contain"
+            className="pointer-events-none absolute inset-0 h-44 w-44 object-contain"
           />
         )}
       </div>
@@ -62,14 +73,8 @@ export function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
         <dt className="text-neutral-400">{t('accountSummary.region')}</dt>
         <dd>{summary.region}</dd>
 
-        <dt className="text-neutral-400">{t('accountSummary.profileIconId')}</dt>
-        <dd>{summary.profileIconId}</dd>
-
         <dt className="text-neutral-400">{t('accountSummary.honorLevel')}</dt>
         <dd>{summary.honorLevel}</dd>
-
-        <dt className="text-neutral-400">{t('accountSummary.honorCheckpoint')}</dt>
-        <dd>{summary.honorCheckpoint}</dd>
       </dl>
     </div>
   );
