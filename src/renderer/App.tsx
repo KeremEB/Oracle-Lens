@@ -4,6 +4,7 @@ import { t } from './core/i18n';
 import { useLolResource } from './core/useLolResource';
 import { AccountSummaryCard } from './games/lol/AccountSummaryCard';
 import { RankedSummarySection } from './games/lol/RankedSummarySection';
+import { ValueScoreCard } from './games/lol/ValueScoreCard';
 import { CollectionTabs } from './games/lol/CollectionTabs';
 
 export default function App() {
@@ -28,6 +29,10 @@ export default function App() {
 
   const summary = useLolResource(connectionState, () => window.oracleLens.lol.getAccountSummary());
   const ranked = useLolResource(connectionState, () => window.oracleLens.lol.getRankedSummary());
+  // Fetched here (not inside CollectionTabs) so both the Skins tab and the
+  // value score card share one fetch instead of downloading the whole skin
+  // collection (tile images included) twice.
+  const skins = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedSkins());
 
   return (
     <div className="h-screen w-screen overflow-y-auto bg-neutral-900 text-neutral-100">
@@ -54,7 +59,13 @@ export default function App() {
         )}
         {ranked.data && <RankedSummarySection ranked={ranked.data} />}
 
-        {connectionState === 'connected' && <CollectionTabs connectionState={connectionState} />}
+        {summary.data && ranked.data && skins.data && (
+          <ValueScoreCard summary={summary.data} ranked={ranked.data} skins={skins.data} />
+        )}
+
+        {connectionState === 'connected' && (
+          <CollectionTabs connectionState={connectionState} skins={skins} />
+        )}
       </div>
     </div>
   );

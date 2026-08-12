@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ConnectionState } from '../../../shared/types/core';
+import type { OwnedSkin } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
-import { useLolResource } from '../../core/useLolResource';
+import { useLolResource, type LolResource } from '../../core/useLolResource';
 import { Tabs } from '../../core/Tabs';
 import { GridDensityProvider } from '../../core/GridDensityContext';
 import { ChampionsSection } from './ChampionsSection';
@@ -11,13 +12,19 @@ import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
 
-export function CollectionTabs({ connectionState }: { connectionState: ConnectionState }) {
+export function CollectionTabs({
+  connectionState,
+  skins,
+}: {
+  connectionState: ConnectionState;
+  /** Fetched once at the App level and shared with the value score card. */
+  skins: LolResource<OwnedSkin[]>;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const champions = useLolResource(connectionState, () =>
     window.oracleLens.lol.getChampionMasteries(),
   );
-  const skins = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedSkins());
   const chromas = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedChromas());
   const wardSkins = useLolResource(connectionState, () =>
     window.oracleLens.lol.getOwnedWardSkins(),

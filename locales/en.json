@@ -50,5 +50,10 @@
   "emotes.loading": "Loading emotes...",
   "profileIcons.title": "Profile Icons",
   "profileIcons.loading": "Loading profile icons...",
-  "search.placeholder": "Search..."
+  "search.placeholder": "Search...",
+  "valueScore.label": "Estimated Account Value",
+  "valueScore.disclaimer": "Rough estimate, not an appraisal",
+  "valueScore.skins": "Skins",
+  "valueScore.rank": "Rank",
+  "valueScore.region": "Region"
 }
