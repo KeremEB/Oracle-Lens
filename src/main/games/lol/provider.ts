@@ -39,11 +39,13 @@ import { mapOwnedEmotes } from './mappers/emotes';
 import { mapOwnedProfileIcons } from './mappers/profileIcons';
 import { mapWallet } from './mappers/wallet';
 import {
+  getBlueEssenceIconDataUrl,
   getLevelBorderDataUrl,
   getMasteryCrestDataUrl,
   getProfileIconImageDataUrl,
   getRankedEmblemDataUrl,
   getRarityGemDataUrl,
+  getRiotPointsIconDataUrl,
 } from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
@@ -267,6 +269,14 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
   async getRankedEmblemUrl(tier: string): Promise<string | null> {
     return getRankedEmblemDataUrl(tier);
+  }
+
+  async getRiotPointsIconUrl(): Promise<string | null> {
+    return getRiotPointsIconDataUrl();
+  }
+
+  async getBlueEssenceIconUrl(): Promise<string | null> {
+    return getBlueEssenceIconDataUrl();
   }
 
   private setStatus(status: ConnectionStatus): void {

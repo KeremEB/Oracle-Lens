@@ -4,6 +4,12 @@ import { t } from '../../core/i18n';
 import { getRarityGemDataUrl } from './rarityGemCache';
 import { rarityLabel } from './rarity';
 
+// Fixed regardless of grid density, per the "never scale these" requirement.
+const GEM_SIZE = 24;
+// Half the gem overflows below the tile (straddling its bottom edge) —
+// reserve that space explicitly so it never overlaps the name.
+const GEM_OVERFLOW = GEM_SIZE / 2 + 6;
+
 export function SkinCard({ skin }: { skin: OwnedSkin }) {
   const [gemUrl, setGemUrl] = useState<string | null>(null);
 
@@ -32,18 +38,27 @@ export function SkinCard({ skin }: { skin: OwnedSkin }) {
           </div>
         )}
 
-        {/* Fixed size regardless of card density, per the "never scale these" requirement. */}
+        {/* Straddles the tile's bottom edge, centered — half over the art,
+            half below it. Only rendered for rarities that have gem art. */}
         {gemUrl && (
           <img
             src={gemUrl}
             alt={rarityLabel(skin.rarity)}
             title={rarityLabel(skin.rarity)}
-            className="absolute -bottom-1 -right-1 h-6 w-6 shrink-0"
+            className="absolute left-1/2 z-10"
+            style={{
+              bottom: -GEM_SIZE / 2,
+              height: GEM_SIZE,
+              width: GEM_SIZE,
+              transform: 'translateX(-50%)',
+            }}
           />
         )}
       </div>
 
-      <span className="w-full truncate text-xs">{skin.name}</span>
+      <span className="w-full truncate text-xs" style={gemUrl ? { marginTop: GEM_OVERFLOW } : undefined}>
+        {skin.name}
+      </span>
 
       {skin.isLegacy && (
         <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-400">

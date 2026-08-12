@@ -1,21 +1,17 @@
 import { useState } from 'react';
 import type {
-  AccountSummary,
   ChampionMasteryEntry,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
   OwnedWardSkin,
-  RankedSummary,
   SkinChromaGroup,
   SkinRarity,
-  Wallet,
 } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 import type { LolResource } from '../../core/useLolResource';
 import { SidebarNav, type SidebarNavItem } from '../../core/SidebarNav';
 import { GridDensityProvider } from '../../core/GridDensityContext';
-import { AccountHeader } from './AccountHeader';
 import { FiltersRow } from './FiltersRow';
 import { ChampionsSection } from './ChampionsSection';
 import { SkinsSection, type LegacyFilter } from './SkinsSection';
@@ -23,7 +19,6 @@ import { ChromasSection } from './ChromasSection';
 import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
-import { ExportPanel } from './export/ExportPanel';
 import type { LolTabId } from './LolTabId';
 
 // Individual chromas owned, not "skins that have any chroma" — matches
@@ -32,10 +27,10 @@ function countChromas(groups: SkinChromaGroup[] | null): number | undefined {
   return groups?.reduce((sum, g) => sum + g.chromas.length, 0);
 }
 
+// Everything to the right of the game rail EXCEPT the account header, which
+// lives in App.tsx now so it can span the full window width above both the
+// rail and this sidebar — see App.tsx.
 export function LolWorkspace({
-  summary,
-  ranked,
-  wallet,
   champions,
   skins,
   chromas,
@@ -43,9 +38,6 @@ export function LolWorkspace({
   emotes,
   profileIcons,
 }: {
-  summary: AccountSummary;
-  ranked: LolResource<RankedSummary>;
-  wallet: LolResource<Wallet>;
   champions: LolResource<ChampionMasteryEntry[]>;
   skins: LolResource<OwnedSkin[]>;
   chromas: LolResource<SkinChromaGroup[]>;
@@ -76,32 +68,6 @@ export function LolWorkspace({
       <SidebarNav items={sidebarItems} activeId={activeTab} onSelect={(id) => setActiveTab(id as LolTabId)} />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <AccountHeader
-          summary={summary}
-          ranked={ranked.data}
-          wallet={wallet.data}
-          actions={
-            ranked.data &&
-            champions.data &&
-            skins.data &&
-            chromas.data &&
-            wardSkins.data &&
-            emotes.data &&
-            profileIcons.data ? (
-              <ExportPanel
-                summary={summary}
-                ranked={ranked.data}
-                champions={champions.data}
-                skins={skins.data}
-                chromas={chromas.data}
-                wardSkins={wardSkins.data}
-                emotes={emotes.data}
-                profileIcons={profileIcons.data}
-              />
-            ) : undefined
-          }
-        />
-
         <FiltersRow
           activeTab={activeTab}
           searchQuery={searchQuery}

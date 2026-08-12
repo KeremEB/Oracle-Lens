@@ -52,6 +52,8 @@ ipcMain.handle(IPC_CHANNELS.lol.wallet, () => lolProvider.getWallet());
 ipcMain.handle(IPC_CHANNELS.lol.rankedEmblemUrl, (_event, tier: string) =>
   lolProvider.getRankedEmblemUrl(tier),
 );
+ipcMain.handle(IPC_CHANNELS.lol.riotPointsIconUrl, () => lolProvider.getRiotPointsIconUrl());
+ipcMain.handle(IPC_CHANNELS.lol.blueEssenceIconUrl, () => lolProvider.getBlueEssenceIconUrl());
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

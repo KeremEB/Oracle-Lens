@@ -23,5 +23,7 @@ export const IPC_CHANNELS = {
     levelBorderUrl: 'lol:levelBorderUrl',
     wallet: 'lol:wallet',
     rankedEmblemUrl: 'lol:rankedEmblemUrl',
+    riotPointsIconUrl: 'lol:riotPointsIconUrl',
+    blueEssenceIconUrl: 'lol:blueEssenceIconUrl',
   },
 } as const;

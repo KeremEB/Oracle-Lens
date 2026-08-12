@@ -437,6 +437,39 @@ export async function getRankedEmblemDataUrl(tier: string): Promise<string | nul
   }
 }
 
+const STATIC_ASSETS_BASE =
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images';
+
+// Currency icons — verified live. Names don't follow one convention (RP's
+// is "icon-rp", BE's is "be-icon"); Riot renamed IP to Blue Essence some
+// years ago and this is apparently the newer asset, not the legacy "icon-ip"
+// one that also still resolves.
+export async function getRiotPointsIconDataUrl(): Promise<string | null> {
+  try {
+    return await getCachedAssetDataUrl(
+      'lol/currency/rp.png',
+      `${STATIC_ASSETS_BASE}/icon-rp.png`,
+      'image/png',
+    );
+  } catch (err) {
+    console.warn('[cdn] failed to fetch RP icon:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+export async function getBlueEssenceIconDataUrl(): Promise<string | null> {
+  try {
+    return await getCachedAssetDataUrl(
+      'lol/currency/be.png',
+      `${STATIC_ASSETS_BASE}/be-icon.png`,
+      'image/png',
+    );
+  } catch (err) {
+    console.warn('[cdn] failed to fetch BE icon:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // Level border frames. There are 21, unlocking at level 1, 30, 50, 75, then
 // every 25 levels up to 500 — verified against two independent community
 // sources (counts and thresholds both match exactly), and the

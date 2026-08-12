@@ -39,6 +39,8 @@ export interface LolBridge {
   getLevelBorderUrl(accountLevel: number): Promise<string | null>;
   getWallet(): Promise<Wallet>;
   getRankedEmblemUrl(tier: string): Promise<string | null>;
+  getRiotPointsIconUrl(): Promise<string | null>;
+  getBlueEssenceIconUrl(): Promise<string | null>;
 }
 
 export interface OracleLensBridge {
