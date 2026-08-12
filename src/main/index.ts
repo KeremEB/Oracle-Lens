@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { getPreferences, setPreference } from './core/store/preferences';
+import { FALLBACK_REGION, RP_PRICING } from './core/pricing/rpPackages';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
 import { IPC_CHANNELS } from '../shared/ipc';
 import type { Preferences } from '../shared/types/core';
@@ -20,6 +21,11 @@ ipcMain.handle(
   (_event, key: keyof Preferences, value: Preferences[keyof Preferences]) =>
     setPreference(key, value),
 );
+
+ipcMain.handle(IPC_CHANNELS.core.rpPricing, () => ({
+  regions: RP_PRICING,
+  fallbackRegion: FALLBACK_REGION,
+}));
 
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
 ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());

@@ -66,5 +66,9 @@
   "valueScore.unpriced": "No price data",
   "valueScore.neverSold": "Never sold for RP",
   "valueScore.specialMode": "LoL Classic copies (not counted)",
+  "valueScore.packages": "Cheapest packages",
+  "valueScore.otherRegions": "Same RP in other regions",
+  "valueScore.regionFallback": "no prices for your region",
+  "valueScore.priceDisclaimer": "Package prices are entered by hand and change over time — treat the local currency figure as an approximation.",
   "valueScore.skinsSuffix": "skins"
 }

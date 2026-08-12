@@ -59,7 +59,9 @@ export default function App() {
         )}
         {ranked.data && <RankedSummarySection ranked={ranked.data} />}
 
-        {skins.data && <ValueScoreCard skins={skins.data} />}
+        {skins.data && summary.data && (
+          <ValueScoreCard skins={skins.data} summary={summary.data} />
+        )}
 
         {connectionState === 'connected' && (
           <CollectionTabs connectionState={connectionState} skins={skins} />
