@@ -1,8 +1,17 @@
-import { skinRarityRank, type OwnedSkin } from '../../../../shared/types/lol';
+import {
+  isPriceableAvailability,
+  skinRarityRank,
+  type OwnedSkin,
+} from '../../../../shared/types/lol';
 import type { LcuSkinMinimal } from '../endpoints/skins';
-import { getChampionMeta, getSkinMeta, getSkinTileDataUrl } from '../../../core/cdn/lol';
+import { baseSkinId, getChampionMeta, getSkinMeta, getSkinTileDataUrl } from '../../../core/cdn/lol';
+import { resolveSkinAvailability } from '../data/skinAvailability';
+import { estimatedRpForRarity } from '../data/rarityRpPrices';
 
-export async function mapOwnedSkins(raw: LcuSkinMinimal[]): Promise<OwnedSkin[]> {
+export async function mapOwnedSkins(
+  raw: LcuSkinMinimal[],
+  rpPrices: Map<number, number>,
+): Promise<OwnedSkin[]> {
   // Base skins are every champion's default look, not a collectible — the
   // client owns one for every champion, so they'd swamp the real skins.
   const owned = raw.filter((skin) => skin.ownership.owned && !skin.isBase);
@@ -17,16 +26,35 @@ export async function mapOwnedSkins(raw: LcuSkinMinimal[]): Promise<OwnedSkin[]>
         getChampionMeta(skin.championId),
       ]);
 
+      const rarity = meta?.rarity ?? 'standard';
+      const isLegacy = meta?.isLegacy ?? false;
+      const isSpecialMode = championMeta?.isSpecialMode ?? false;
+
+      // Special-mode ids shadow a normal skin, so classify them off the skin
+      // they shadow — otherwise a "LoL Classic" copy of a Victorious skin
+      // would be labelled purchasable.
+      const availability = resolveSkinAvailability(baseSkinId(skin.id), rarity, isLegacy);
+
+      // Only ever price what was actually sold for RP. Rewards, craftables,
+      // promos and retired exclusives stay unpriced no matter what the store
+      // happens to return, and special-mode copies are granted off a skin the
+      // account already owns — pricing them would bill the same skin twice.
+      const priceable = isPriceableAvailability(availability) && !isSpecialMode;
+      const rpCost = priceable ? (rpPrices.get(skin.id) ?? null) : null;
+
       return {
         skinId: skin.id,
         championId: skin.championId,
         championName: championMeta?.name ?? `Champion ${skin.championId}`,
         name: skin.name,
-        rarity: meta?.rarity ?? 'standard',
-        isLegacy: meta?.isLegacy ?? false,
+        rarity,
+        isLegacy,
         owned: skin.ownership.owned,
         tileDataUrl,
-        isSpecialMode: championMeta?.isSpecialMode ?? false,
+        isSpecialMode,
+        availability,
+        rpCost,
+        estimatedRpCost: rpCost === null && priceable ? estimatedRpForRarity(rarity) : null,
       };
     }),
   );

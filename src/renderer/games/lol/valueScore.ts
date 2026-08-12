@@ -1,110 +1,88 @@
-import type { AccountSummary, OwnedSkin, RankedSummary, RankedQueueStatus } from '../../../shared/types/lol';
+import {
+  isPriceableAvailability,
+  type OwnedSkin,
+  type SkinAvailability,
+} from '../../../shared/types/lol';
 
-// Every weight below is a rough, illustrative estimate — there is no
-// authoritative "account value" formula, and this is explicitly a guess
-// (see CLAUDE.md's roadmap note for this feature). All tunable numbers live
-// in this one module so adjusting the estimate never means hunting through
-// UI components.
-
-const POINTS_PER_SKIN = 2;
-
-// Same tiers as SKIN_RARITY_ORDER (shared/types/lol.ts), as point values
-// instead of just a sort rank. "Other" (rotating special-mode) skins are
-// excluded entirely — they're temporary event content, not real ownership.
-const RARITY_POINTS: Record<OwnedSkin['rarity'], number> = {
-  standard: 1,
-  rare: 2,
-  epic: 5,
-  mythic: 8,
-  legendary: 12,
-  ultimate: 20,
-  transcendent: 35,
-  exalted: 50,
-};
-
-// LCU tier strings are uppercase (e.g. "PLATINUM"). Unranked/provisional
-// contribute 0.
-const TIER_POINTS: Record<string, number> = {
-  IRON: 1,
-  BRONZE: 2,
-  SILVER: 3,
-  GOLD: 5,
-  PLATINUM: 8,
-  EMERALD: 12,
-  DIAMOND: 18,
-  MASTER: 30,
-  GRANDMASTER: 45,
-  CHALLENGER: 60,
-};
-
-// Rough relative regional market multipliers — not sourced from anywhere
-// authoritative, purely illustrative. Unlisted regions default to 1.
-const REGION_MULTIPLIERS: Record<string, number> = {
-  KR: 1.3,
-  NA: 1.2,
-  EUW: 1.15,
-  EUNE: 0.9,
-  BR: 0.8,
-  LAN: 0.8,
-  LAS: 0.75,
-  OCE: 0.9,
-  TR: 0.7,
-  RU: 0.7,
-  JP: 1.0,
-};
-
-export interface ValueScoreBreakdown {
-  skinCount: number;
-  skinPoints: number;
-  bestRankTier: string | null;
-  rankPoints: number;
-  region: string;
-  regionMultiplier: number;
-  estimatedScore: number;
+/**
+ * Account value is reported as RP actually spent, never as an invented score.
+ * Prices come from the LCU's own store catalog; nothing here derives a price
+ * from rarity. The one exception is `estimatedRp`, which the provider fills in
+ * from a rarity's standard price for vaulted content the store stopped
+ * pricing — it is kept in its own bucket and never folded into `exactRp`.
+ *
+ * Three buckets, in descending order of how much we trust them:
+ *   exactRp     — priced by the client right now
+ *   estimatedRp — priceable, but only via its rarity's standard price
+ *   unpriced    — priceable in principle, no price and no usable rarity
+ * Skins that were never sold for RP (rewards, promos, craftables, retired
+ * exclusives) are counted but never priced.
+ *
+ * "LoL Classic" special-mode copies sit outside all of it. They are granted
+ * off a skin the account already owns, so counting them would bill the same
+ * purchase twice — they get their own count so the exclusion stays visible.
+ */
+export interface RpValueBreakdown {
+  exactRp: number;
+  exactCount: number;
+  estimatedRp: number;
+  estimatedCount: number;
+  /** Priceable skins with neither a store price nor an estimable rarity. */
+  unpricedCount: number;
+  countsByAvailability: Record<SkinAvailability, number>;
+  specialModeCount: number;
+  /** Excludes special-mode copies — the number the buckets actually add up to. */
+  totalSkins: number;
 }
 
-function rankedTierOf(status: RankedQueueStatus): string | null {
-  return status.kind === 'ranked' ? status.tier.toUpperCase() : null;
-}
+const EMPTY_COUNTS: Record<SkinAvailability, number> = {
+  purchasable: 0,
+  legacy: 0,
+  reward: 0,
+  craftable: 0,
+  promotional: 0,
+  unavailable: 0,
+};
 
-function bestRankTier(ranked: RankedSummary): string | null {
-  const candidates = [rankedTierOf(ranked.soloDuo), rankedTierOf(ranked.flex)].filter(
-    (tier): tier is string => tier !== null,
-  );
-  if (candidates.length === 0) return null;
-
-  return candidates.reduce((best, tier) =>
-    (TIER_POINTS[tier] ?? 0) > (TIER_POINTS[best] ?? 0) ? tier : best,
-  );
-}
-
-export function computeValueScore(
-  summary: AccountSummary,
-  ranked: RankedSummary,
-  skins: OwnedSkin[],
-): ValueScoreBreakdown {
-  const realSkins = skins.filter((skin) => !skin.isSpecialMode);
-
-  const skinPoints = realSkins.reduce(
-    (sum, skin) => sum + POINTS_PER_SKIN + RARITY_POINTS[skin.rarity],
-    0,
-  );
-
-  const bestTier = bestRankTier(ranked);
-  const rankPoints = bestTier ? (TIER_POINTS[bestTier] ?? 0) : 0;
-
-  const region = summary.region.toUpperCase();
-  const regionMultiplier = REGION_MULTIPLIERS[region] ?? 1;
-
-  const estimatedScore = Math.round((skinPoints + rankPoints) * regionMultiplier);
-
-  return {
-    skinCount: realSkins.length,
-    skinPoints,
-    bestRankTier: bestTier,
-    rankPoints,
-    region: summary.region,
-    regionMultiplier,
-    estimatedScore,
+export function computeRpValue(skins: OwnedSkin[]): RpValueBreakdown {
+  const breakdown: RpValueBreakdown = {
+    exactRp: 0,
+    exactCount: 0,
+    estimatedRp: 0,
+    estimatedCount: 0,
+    unpricedCount: 0,
+    countsByAvailability: { ...EMPTY_COUNTS },
+    specialModeCount: 0,
+    totalSkins: 0,
   };
+
+  for (const skin of skins) {
+    if (skin.isSpecialMode) {
+      breakdown.specialModeCount += 1;
+      continue;
+    }
+
+    breakdown.totalSkins += 1;
+    breakdown.countsByAvailability[skin.availability] += 1;
+
+    if (skin.rpCost !== null) {
+      breakdown.exactRp += skin.rpCost;
+      breakdown.exactCount += 1;
+    } else if (skin.estimatedRpCost !== null) {
+      breakdown.estimatedRp += skin.estimatedRpCost;
+      breakdown.estimatedCount += 1;
+    } else if (isPriceableAvailability(skin.availability)) {
+      breakdown.unpricedCount += 1;
+    }
+  }
+
+  return breakdown;
 }
+
+/** Availability tiers that are reported as a bare count, never priced. */
+export const UNPRICED_AVAILABILITIES: readonly SkinAvailability[] = [
+  'reward',
+  'craftable',
+  'promotional',
+  'unavailable',
+];

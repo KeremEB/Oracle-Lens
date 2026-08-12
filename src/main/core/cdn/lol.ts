@@ -36,8 +36,13 @@ export function isSpecialChampionId(championId: number): boolean {
   return championId >= SPECIAL_CHAMPION_ID_OFFSET;
 }
 
-function isSpecialSkinId(skinId: number): boolean {
+export function isSpecialSkinId(skinId: number): boolean {
   return skinId >= SPECIAL_SKIN_ID_OFFSET;
+}
+
+/** The normal skin a special-mode id shadows, for callers keying off real ids. */
+export function baseSkinId(skinId: number): number {
+  return isSpecialSkinId(skinId) ? skinId - SPECIAL_SKIN_ID_OFFSET : skinId;
 }
 
 interface DdragonChampion {

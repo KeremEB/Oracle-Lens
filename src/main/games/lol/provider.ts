@@ -23,6 +23,7 @@ import { getCurrentRankedStats } from './endpoints/ranked';
 import { getChampionMasteryList } from './endpoints/championMastery';
 import { getOwnedChampionsMinimal } from './endpoints/champions';
 import { getSkinsMinimal } from './endpoints/skins';
+import { buildRpPriceIndex, getSkinStoreCatalog } from './endpoints/store';
 import { getWardSkins } from './endpoints/wardSkins';
 import { getEmoteInventory, getProfileIconInventory } from './endpoints/inventory';
 import { mapAccountSummary } from './mappers/accountSummary';
@@ -52,8 +53,8 @@ function errorMessage(err: unknown): string {
  * or stored beyond the request, `league-connect` only reads the lockfile
  * Riot already writes to disk.
  *
- * Value score/search/... are not implemented yet; only the declared
- * capabilities reflect what the UI can actually render today.
+ * Export/history are not implemented yet; only the declared capabilities
+ * reflect what the UI can actually render today.
  */
 export class LeagueOfLegendsProvider implements GameProvider {
   readonly id = 'lol' as const;
@@ -65,6 +66,7 @@ export class LeagueOfLegendsProvider implements GameProvider {
     'skins',
     'chromas',
     'collectibles',
+    'valueScore',
   ];
 
   private status: ConnectionStatus = { state: 'unavailable' };
@@ -183,8 +185,17 @@ export class LeagueOfLegendsProvider implements GameProvider {
     const credentials = this.credentials;
 
     const summoner = await getCurrentSummoner(credentials);
-    const raw = await getSkinsMinimal(credentials, summoner.summonerId);
-    return mapOwnedSkins(raw);
+    const [raw, catalog] = await Promise.all([
+      getSkinsMinimal(credentials, summoner.summonerId),
+      // A missing catalog costs exact RP prices, not the whole skin list —
+      // degrade to estimates rather than failing the screen.
+      getSkinStoreCatalog(credentials).catch((err) => {
+        console.warn('[lol] store catalog request failed, RP prices unavailable:', errorMessage(err));
+        return [];
+      }),
+    ]);
+
+    return mapOwnedSkins(raw, buildRpPriceIndex(catalog));
   }
 
   async getRarityGemUrl(rarity: SkinRarity): Promise<string | null> {
