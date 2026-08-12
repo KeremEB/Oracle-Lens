@@ -2,6 +2,8 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { getPreferences, setPreference } from './core/store/preferences';
+import { saveExportFile } from './core/export/saveExportFile';
+import type { SaveExportRequest } from '../shared/types/export';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
 import { IPC_CHANNELS } from '../shared/ipc';
 import type { Preferences } from '../shared/types/core';
@@ -19,6 +21,10 @@ ipcMain.handle(
   IPC_CHANNELS.core.setPreference,
   (_event, key: keyof Preferences, value: Preferences[keyof Preferences]) =>
     setPreference(key, value),
+);
+
+ipcMain.handle(IPC_CHANNELS.core.saveExportFile, (event, request: SaveExportRequest) =>
+  saveExportFile(BrowserWindow.fromWebContents(event.sender), request),
 );
 
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());

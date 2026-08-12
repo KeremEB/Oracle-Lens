@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ConnectionState } from '../../shared/types/core';
 
-interface LolResource<T> {
+export interface LolResource<T> {
   data: T | null;
   error: string | null;
 }

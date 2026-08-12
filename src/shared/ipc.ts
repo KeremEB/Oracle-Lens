@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   core: {
     getPreferences: 'core:getPreferences',
     setPreference: 'core:setPreference',
+    saveExportFile: 'core:saveExportFile',
   },
   lol: {
     connectionStatus: 'lol:connectionStatus',

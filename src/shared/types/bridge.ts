@@ -2,6 +2,7 @@
 // Defined once here so preload (implementation) and renderer (consumer) can't drift apart.
 
 import type { ConnectionStatus, Preferences } from './core';
+import type { SaveExportRequest, SaveExportResult } from './export';
 import type {
   AccountSummary,
   ChampionMasteryEntry,
@@ -17,6 +18,7 @@ import type {
 export interface CoreBridge {
   getPreferences(): Promise<Preferences>;
   setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]): Promise<void>;
+  saveExportFile(request: SaveExportRequest): Promise<SaveExportResult>;
 }
 
 export interface LolBridge {

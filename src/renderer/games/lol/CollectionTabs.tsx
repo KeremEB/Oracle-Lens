@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import type { ConnectionState } from '../../../shared/types/core';
+import type {
+  ChampionMasteryEntry,
+  OwnedEmote,
+  OwnedProfileIcon,
+  OwnedSkin,
+  OwnedWardSkin,
+  SkinChromaGroup,
+} from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
-import { useLolResource } from '../../core/useLolResource';
+import type { LolResource } from '../../core/useLolResource';
 import { Tabs } from '../../core/Tabs';
 import { GridDensityProvider } from '../../core/GridDensityContext';
 import { ChampionsSection } from './ChampionsSection';
@@ -11,21 +18,25 @@ import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
 
-export function CollectionTabs({ connectionState }: { connectionState: ConnectionState }) {
+// Fetched once at the App level and shared with the export feature, so
+// neither triggers a duplicate round-trip (skins/champions especially fan out
+// into many CDN calls each).
+export function CollectionTabs({
+  champions,
+  skins,
+  chromas,
+  wardSkins,
+  emotes,
+  profileIcons,
+}: {
+  champions: LolResource<ChampionMasteryEntry[]>;
+  skins: LolResource<OwnedSkin[]>;
+  chromas: LolResource<SkinChromaGroup[]>;
+  wardSkins: LolResource<OwnedWardSkin[]>;
+  emotes: LolResource<OwnedEmote[]>;
+  profileIcons: LolResource<OwnedProfileIcon[]>;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
-
-  const champions = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getChampionMasteries(),
-  );
-  const skins = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedSkins());
-  const chromas = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedChromas());
-  const wardSkins = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getOwnedWardSkins(),
-  );
-  const emotes = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedEmotes());
-  const profileIcons = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getOwnedProfileIcons(),
-  );
 
   return (
     <GridDensityProvider>

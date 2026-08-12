@@ -45,6 +45,24 @@ export function GridDensityProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// A density provider that never reads or persists the user's on-screen
+// preference — used by the export report, which must render at the same
+// fixed size regardless of whatever density the live grid happens to be set
+// to right now.
+export function FixedGridDensityProvider({
+  minCardWidth,
+  children,
+}: {
+  minCardWidth: number;
+  children: ReactNode;
+}) {
+  return (
+    <GridDensityContext.Provider value={{ minCardWidth, adjustDensity: () => {} }}>
+      {children}
+    </GridDensityContext.Provider>
+  );
+}
+
 export function useGridDensity(): GridDensityContextValue {
   const ctx = useContext(GridDensityContext);
   if (!ctx) {

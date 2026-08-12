@@ -8,6 +8,8 @@ const core: OracleLensBridge['core'] = {
 
   setPreference: (key, value) =>
     ipcRenderer.invoke(IPC_CHANNELS.core.setPreference, key, value),
+
+  saveExportFile: (request) => ipcRenderer.invoke(IPC_CHANNELS.core.saveExportFile, request),
 };
 
 const lol: OracleLensBridge['lol'] = {

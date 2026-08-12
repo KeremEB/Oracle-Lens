@@ -10,10 +10,12 @@ export function ChampionGrid({
   title,
   champions,
   searchQuery,
+  hideFilters = false,
 }: {
   title: string;
   champions: ChampionMasteryEntry[];
   searchQuery: string;
+  hideFilters?: boolean;
 }) {
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all');
   const filterId = `mastery-level-filter-${title.replace(/\s+/g, '-').toLowerCase()}`;
@@ -40,24 +42,28 @@ export function ChampionGrid({
     <div className="w-full">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">{title}</h2>
 
-      <div className="mb-3 flex items-center gap-2">
-        <label htmlFor={filterId} className="text-sm text-neutral-400">
-          {t('champions.filterByLevel')}
-        </label>
-        <select
-          id={filterId}
-          className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
-          value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-        >
-          <option value="all">{t('champions.allLevels')}</option>
-          {availableLevels.map((level) => (
-            <option key={level} value={level}>
-              {level === 0 ? t('champions.unplayed') : level}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!hideFilters && (
+        <div className="mb-3 flex items-center gap-2">
+          <label htmlFor={filterId} className="text-sm text-neutral-400">
+            {t('champions.filterByLevel')}
+          </label>
+          <select
+            id={filterId}
+            className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
+            value={levelFilter}
+            onChange={(e) =>
+              setLevelFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))
+            }
+          >
+            <option value="all">{t('champions.allLevels')}</option>
+            {availableLevels.map((level) => (
+              <option key={level} value={level}>
+                {level === 0 ? t('champions.unplayed') : level}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div
         ref={gridRef}
