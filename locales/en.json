@@ -49,5 +49,6 @@
   "emotes.title": "Emotes",
   "emotes.loading": "Loading emotes...",
   "profileIcons.title": "Profile Icons",
-  "profileIcons.loading": "Loading profile icons..."
+  "profileIcons.loading": "Loading profile icons...",
+  "search.placeholder": "Search..."
 }

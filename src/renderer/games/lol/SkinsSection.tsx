@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { OwnedSkin, SkinRarity } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
+import { matchesSearch } from '../../core/searchMatch';
 import { allRarities, rarityLabel } from './rarity';
-import { SkinCard } from './SkinCard';
+import { SkinGrid } from './SkinGrid';
 
 type LegacyFilter = 'all' | 'legacyOnly' | 'nonLegacyOnly';
 
-export function SkinsSection({ skins }: { skins: OwnedSkin[] }) {
+export function SkinsSection({ skins, searchQuery }: { skins: OwnedSkin[]; searchQuery: string }) {
   const [rarityFilter, setRarityFilter] = useState<SkinRarity | 'all'>('all');
   const [legacyFilter, setLegacyFilter] = useState<LegacyFilter>('all');
 
@@ -18,9 +19,9 @@ export function SkinsSection({ skins }: { skins: OwnedSkin[] }) {
         if (rarityFilter !== 'all' && skin.rarity !== rarityFilter) return false;
         if (legacyFilter === 'legacyOnly' && !skin.isLegacy) return false;
         if (legacyFilter === 'nonLegacyOnly' && skin.isLegacy) return false;
-        return true;
+        return matchesSearch(skin.name, searchQuery);
       }),
-    [skins, rarityFilter, legacyFilter],
+    [skins, rarityFilter, legacyFilter, searchQuery],
   );
 
   const { standard, other } = useMemo(
@@ -77,25 +78,10 @@ export function SkinsSection({ skins }: { skins: OwnedSkin[] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
-          {standard.map((skin) => (
-            <SkinCard key={skin.skinId} skin={skin} />
-          ))}
-        </div>
+        <SkinGrid skins={standard} />
       </div>
 
-      {other.length > 0 && (
-        <div className="w-full">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">
-            {t('skins.otherTitle')}
-          </h2>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
-            {other.map((skin) => (
-              <SkinCard key={skin.skinId} skin={skin} />
-            ))}
-          </div>
-        </div>
-      )}
+      {other.length > 0 && <SkinGrid title={t('skins.otherTitle')} skins={other} />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // Shape of the contextBridge surface exposed to the renderer as `window.oracleLens`.
 // Defined once here so preload (implementation) and renderer (consumer) can't drift apart.
 
-import type { ConnectionStatus } from './core';
+import type { ConnectionStatus, Preferences } from './core';
 import type {
   AccountSummary,
   ChampionMasteryEntry,
@@ -13,6 +13,11 @@ import type {
   SkinChromaGroup,
   SkinRarity,
 } from './lol';
+
+export interface CoreBridge {
+  getPreferences(): Promise<Preferences>;
+  setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]): Promise<void>;
+}
 
 export interface LolBridge {
   getConnectionStatus(): Promise<ConnectionStatus>;
@@ -27,8 +32,11 @@ export interface LolBridge {
   getOwnedWardSkins(): Promise<OwnedWardSkin[]>;
   getOwnedEmotes(): Promise<OwnedEmote[]>;
   getOwnedProfileIcons(): Promise<OwnedProfileIcon[]>;
+  getProfileIconUrl(iconId: number): Promise<string | null>;
+  getLevelBorderUrl(accountLevel: number): Promise<string | null>;
 }
 
 export interface OracleLensBridge {
+  core: CoreBridge;
   lol: LolBridge;
 }

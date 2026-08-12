@@ -1,6 +1,10 @@
 // IPC channel names shared between main and preload, so both sides stay in sync.
 
 export const IPC_CHANNELS = {
+  core: {
+    getPreferences: 'core:getPreferences',
+    setPreference: 'core:setPreference',
+  },
   lol: {
     connectionStatus: 'lol:connectionStatus',
     connectionStatusChanged: 'lol:connectionStatusChanged',
@@ -14,5 +18,7 @@ export const IPC_CHANNELS = {
     ownedWardSkins: 'lol:ownedWardSkins',
     ownedEmotes: 'lol:ownedEmotes',
     ownedProfileIcons: 'lol:ownedProfileIcons',
+    profileIconUrl: 'lol:profileIconUrl',
+    levelBorderUrl: 'lol:levelBorderUrl',
   },
 } as const;

@@ -414,3 +414,45 @@ export async function getProfileIconImageDataUrl(iconId: number): Promise<string
     return null;
   }
 }
+
+// Level border frames. There are 21, unlocking at level 1, 30, 50, 75, then
+// every 25 levels up to 500 — verified against two independent community
+// sources (counts and thresholds both match exactly), and the
+// "theme-N-border.png" filenames are confirmed to exist 1-21. The mapping
+// from theme number to level threshold assumes ascending order (theme 1 =
+// level 1 "Piltover" ... theme 21 = level 500 "Eternus"), which isn't
+// independently confirmed but is the only sane reading of the file naming.
+const LEVEL_BORDER_THRESHOLDS = [
+  1, 30, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475,
+  500,
+];
+
+const LEVEL_BORDER_BASE =
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/uikit/themed-borders';
+
+function getLevelBorderTheme(accountLevel: number): number {
+  let theme = 1;
+  for (let i = 0; i < LEVEL_BORDER_THRESHOLDS.length; i++) {
+    if (accountLevel >= LEVEL_BORDER_THRESHOLDS[i]) {
+      theme = i + 1;
+    } else {
+      break;
+    }
+  }
+  return theme;
+}
+
+export async function getLevelBorderDataUrl(accountLevel: number): Promise<string | null> {
+  const theme = getLevelBorderTheme(accountLevel);
+  const remoteUrl = `${LEVEL_BORDER_BASE}/theme-${theme}-border.png`;
+
+  try {
+    return await getCachedAssetDataUrl(`lol/level-border/${theme}.png`, remoteUrl, 'image/png');
+  } catch (err) {
+    console.warn(
+      `[cdn] failed to fetch level border for theme ${theme}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}

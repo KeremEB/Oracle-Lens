@@ -3,6 +3,13 @@ import { IPC_CHANNELS } from '../shared/ipc';
 import type { ConnectionStatus } from '../shared/types/core';
 import type { OracleLensBridge } from '../shared/types/bridge';
 
+const core: OracleLensBridge['core'] = {
+  getPreferences: () => ipcRenderer.invoke(IPC_CHANNELS.core.getPreferences),
+
+  setPreference: (key, value) =>
+    ipcRenderer.invoke(IPC_CHANNELS.core.setPreference, key, value),
+};
+
 const lol: OracleLensBridge['lol'] = {
   getConnectionStatus: () => ipcRenderer.invoke(IPC_CHANNELS.lol.connectionStatus),
 
@@ -31,8 +38,13 @@ const lol: OracleLensBridge['lol'] = {
   getOwnedEmotes: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedEmotes),
 
   getOwnedProfileIcons: () => ipcRenderer.invoke(IPC_CHANNELS.lol.ownedProfileIcons),
+
+  getProfileIconUrl: (iconId) => ipcRenderer.invoke(IPC_CHANNELS.lol.profileIconUrl, iconId),
+
+  getLevelBorderUrl: (accountLevel) =>
+    ipcRenderer.invoke(IPC_CHANNELS.lol.levelBorderUrl, accountLevel),
 };
 
-const oracleLens: OracleLensBridge = { lol };
+const oracleLens: OracleLensBridge = { core, lol };
 
 contextBridge.exposeInMainWorld('oracleLens', oracleLens);

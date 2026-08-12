@@ -33,7 +33,12 @@ import { mapOwnedChromas } from './mappers/chromas';
 import { mapOwnedWardSkins } from './mappers/wardSkins';
 import { mapOwnedEmotes } from './mappers/emotes';
 import { mapOwnedProfileIcons } from './mappers/profileIcons';
-import { getMasteryCrestDataUrl, getRarityGemDataUrl } from '../../core/cdn/lol';
+import {
+  getLevelBorderDataUrl,
+  getMasteryCrestDataUrl,
+  getProfileIconImageDataUrl,
+  getRarityGemDataUrl,
+} from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -224,6 +229,14 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
     const raw = await getProfileIconInventory(this.credentials);
     return mapOwnedProfileIcons(raw);
+  }
+
+  async getProfileIconUrl(iconId: number): Promise<string | null> {
+    return getProfileIconImageDataUrl(iconId);
+  }
+
+  async getLevelBorderUrl(accountLevel: number): Promise<string | null> {
+    return getLevelBorderDataUrl(accountLevel);
   }
 
   private setStatus(status: ConnectionStatus): void {

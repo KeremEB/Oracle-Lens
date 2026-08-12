@@ -1,17 +1,26 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ChampionMasteryEntry } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
+import { matchesSearch } from '../../core/searchMatch';
+import { useGridDensity } from '../../core/GridDensityContext';
+import { useCtrlScrollDensity } from '../../core/useCtrlScrollDensity';
 import { ChampionCard } from './ChampionCard';
 
 export function ChampionGrid({
   title,
   champions,
+  searchQuery,
 }: {
   title: string;
   champions: ChampionMasteryEntry[];
+  searchQuery: string;
 }) {
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all');
   const filterId = `mastery-level-filter-${title.replace(/\s+/g, '-').toLowerCase()}`;
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const { minCardWidth, adjustDensity } = useGridDensity();
+  useCtrlScrollDensity(gridRef, adjustDensity);
 
   const availableLevels = useMemo(
     () => [...new Set(champions.map((c) => c.masteryLevel))].sort((a, b) => b - a),
@@ -19,10 +28,13 @@ export function ChampionGrid({
   );
 
   const visibleChampions = useMemo(() => {
-    const filtered =
-      levelFilter === 'all' ? champions : champions.filter((c) => c.masteryLevel === levelFilter);
+    const filtered = champions.filter(
+      (c) =>
+        (levelFilter === 'all' || c.masteryLevel === levelFilter) &&
+        matchesSearch(c.championName, searchQuery),
+    );
     return [...filtered].sort((a, b) => b.masteryPoints - a.masteryPoints);
-  }, [champions, levelFilter]);
+  }, [champions, levelFilter, searchQuery]);
 
   return (
     <div className="w-full">
@@ -47,7 +59,11 @@ export function ChampionGrid({
         </select>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3">
+      <div
+        ref={gridRef}
+        className="grid gap-3"
+        style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))` }}
+      >
         {visibleChampions.map((champion) => (
           <ChampionCard key={champion.championId} champion={champion} />
         ))}

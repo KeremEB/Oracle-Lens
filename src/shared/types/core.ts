@@ -42,3 +42,10 @@ export interface GameProvider {
   /** Subscribe to connection status changes. Returns an unsubscribe function. */
   onStatusChange(listener: ConnectionListener): () => void;
 }
+
+// User preferences (theme mode, last active game, filters, grid density, ...)
+// per the Persistence section of CLAUDE.md — game-agnostic, stored via
+// src/main/core/store/preferences.ts.
+export interface Preferences {
+  gridDensityIndex?: number;
+}
