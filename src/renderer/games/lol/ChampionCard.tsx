@@ -7,7 +7,7 @@ import { getMasteryBannerDataUrl } from './masteryBannerCache';
 // card's own minCardWidth (see GridDensityContext) rather than a constant,
 // so the badge grows and shrinks along with the card instead of staying a
 // fixed size while everything around it resizes.
-const BADGE_SIZE_RATIO = 0.6;
+const BADGE_SIZE_RATIO = 0.7;
 
 export function ChampionCard({
   champion,
