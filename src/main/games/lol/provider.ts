@@ -40,7 +40,9 @@ import { mapOwnedProfileIcons } from './mappers/profileIcons';
 import { mapWallet } from './mappers/wallet';
 import {
   getBlueEssenceIconDataUrl,
+  getHonorBadgeDataUrl,
   getLevelBorderDataUrl,
+  getMasteryBannerDataUrl,
   getMasteryCrestDataUrl,
   getProfileIconImageDataUrl,
   getRankedEmblemDataUrl,
@@ -49,9 +51,15 @@ import {
 } from '../../core/cdn/lol';
 
 const POLL_INTERVAL_MS = 2500;
+const READY_CHECK_INTERVAL_MS = 500;
+const READY_CHECK_MAX_ATTEMPTS = 20; // ~10s total
 
 function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Network-level failures mean the client is gone (closed, crashed, or the
@@ -123,6 +131,18 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
     try {
       const credentials = await authenticate({ awaitConnection: false });
+
+      // The lockfile can exist — and the LCU's HTTPS server can already be
+      // accepting connections — before the client's internal services have
+      // actually finished loading. Hitting current-summoner right after the
+      // client reopens returns a plain 404, not a connection error, so
+      // withCredentials' disconnect handling doesn't catch it: status would
+      // go 'connected' while every real request kept 404ing, with nothing
+      // to ever retry the initial fetch and no way out short of restarting
+      // the app. Confirm the summoner endpoint actually answers before
+      // calling the provider connected at all.
+      await this.waitUntilReady(credentials);
+
       const client = new LeagueClient(credentials, { pollInterval: POLL_INTERVAL_MS });
 
       client.on('disconnect', () => {
@@ -137,7 +157,32 @@ export class LeagueOfLegendsProvider implements GameProvider {
       this.credentials = credentials;
       this.setStatus({ state: 'connected' });
     } catch (err) {
+      // Left at 'error' rather than 'unavailable': ConnectionManager
+      // retries connect() on either state (it only skips 'connected' and
+      // 'connecting'), so this still recovers on its own — but 'error'
+      // surfaces the wait in the UI instead of silently going back to
+      // "no client found" while one is plainly running.
       this.setStatus({ state: 'error', error: errorMessage(err) });
+    }
+  }
+
+  /**
+   * Polls current-summoner until it stops 404ing (or the client vanishes
+   * outright, in which case there's no point continuing to wait for it to
+   * warm up). Doesn't touch `this.status` — connect() decides what the
+   * outcome means for connection state.
+   */
+  private async waitUntilReady(credentials: Credentials): Promise<void> {
+    for (let attempt = 1; attempt <= READY_CHECK_MAX_ATTEMPTS; attempt++) {
+      try {
+        await getCurrentSummoner(credentials);
+        return;
+      } catch (err) {
+        if (isConnectionLostError(err) || attempt === READY_CHECK_MAX_ATTEMPTS) {
+          throw err;
+        }
+        await sleep(READY_CHECK_INTERVAL_MS);
+      }
     }
   }
 
@@ -230,6 +275,14 @@ export class LeagueOfLegendsProvider implements GameProvider {
 
   async getMasteryCrestUrl(level: number): Promise<string | null> {
     return getMasteryCrestDataUrl(level);
+  }
+
+  async getMasteryBannerUrl(level: number): Promise<string | null> {
+    return getMasteryBannerDataUrl(level);
+  }
+
+  async getHonorBadgeUrl(level: number): Promise<string | null> {
+    return getHonorBadgeDataUrl(level);
   }
 
   async getOwnedSkins(): Promise<OwnedSkin[]> {

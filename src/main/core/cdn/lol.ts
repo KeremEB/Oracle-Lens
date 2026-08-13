@@ -173,6 +173,81 @@ export async function getMasteryCrestDataUrl(level: number): Promise<string | nu
   }
 }
 
+// Mastery banner — the ribbon that sits behind the crest in the client's
+// own mastery badge. Not in any stylesheet; extracted by parsing the
+// client's rcp-fe-lol-shared-components bundle's AST (not text-searched —
+// the naive "grep for mastery-banner near mastery" pass came up empty
+// because the two are wired together in JS, not CSS) to find
+// `getMasteryBannerAsset`:
+//   const LEVEL_TO_BANNER = {0:0,1:1,2:1,3:1,4:1,5:2,6:2,7:2,8:2,9:2,10:3}
+//   const BANNER_ASSET = {0: mastery-banner-0.png, 1: mastery-banner-1.svg,
+//                          2: mastery-banner-2.svg, 3: mastery-banner-3.svg}
+// getMasteryBannerAsset(level) = BANNER_ASSET[LEVEL_TO_BANNER[min(level,10)]]
+// Confirmed by resolving the bundle's own webpack module array (parsed with
+// acorn, not string offsets) at exactly those four indices.
+const MASTERY_BANNER_BASE =
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default';
+
+const MASTERY_BANNER_FILES = [
+  'mastery-banner-0.png',
+  'mastery-banner-1.svg',
+  'mastery-banner-2.svg',
+  'mastery-banner-3.svg',
+] as const;
+
+function masteryBannerIndex(level: number): number {
+  const clamped = Math.min(Math.max(Math.round(level), 0), 10);
+  if (clamped === 0) return 0;
+  if (clamped <= 4) return 1;
+  if (clamped <= 9) return 2;
+  return 3;
+}
+
+export async function getMasteryBannerDataUrl(level: number): Promise<string | null> {
+  const bannerIndex = masteryBannerIndex(level);
+  const file = MASTERY_BANNER_FILES[bannerIndex];
+  const remoteUrl = `${MASTERY_BANNER_BASE}/${file}`;
+  const mimeType = file.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+
+  try {
+    return await getCachedAssetDataUrl(`lol/mastery-banner/${file}`, remoteUrl, mimeType);
+  } catch (err) {
+    console.warn(
+      `[cdn] failed to fetch mastery banner for level ${level}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
+// Honor level badges — verified live against a real directory listing of
+// rcp-fe-lol-shared-components (badge-honor-1.svg .. badge-honor-5.svg
+// exist; badge-honor-0.svg and badge-honor-6.svg both 404). Honor level 0
+// ("restricted") has no badge art, same as mastery level 0.
+const HONOR_BADGE_BASE =
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default';
+
+export async function getHonorBadgeDataUrl(level: number): Promise<string | null> {
+  const clamped = Math.round(level);
+  if (clamped < 1 || clamped > 5) return null;
+
+  const remoteUrl = `${HONOR_BADGE_BASE}/badge-honor-${clamped}.svg`;
+
+  try {
+    return await getCachedAssetDataUrl(
+      `lol/honor-badge/${clamped}.svg`,
+      remoteUrl,
+      'image/svg+xml',
+    );
+  } catch (err) {
+    console.warn(
+      `[cdn] failed to fetch honor badge for level ${level}:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
 // Community Dragon's own path convention for anything sourced from the
 // client's "/lol-game-data/assets/..." paths — verified manually against a
 // real splash image:

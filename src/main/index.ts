@@ -54,6 +54,12 @@ ipcMain.handle(IPC_CHANNELS.lol.rankedEmblemUrl, (_event, tier: string) =>
 );
 ipcMain.handle(IPC_CHANNELS.lol.riotPointsIconUrl, () => lolProvider.getRiotPointsIconUrl());
 ipcMain.handle(IPC_CHANNELS.lol.blueEssenceIconUrl, () => lolProvider.getBlueEssenceIconUrl());
+ipcMain.handle(IPC_CHANNELS.lol.masteryBannerUrl, (_event, level: number) =>
+  lolProvider.getMasteryBannerUrl(level),
+);
+ipcMain.handle(IPC_CHANNELS.lol.honorBadgeUrl, (_event, level: number) =>
+  lolProvider.getHonorBadgeUrl(level),
+);
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

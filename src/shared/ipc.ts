@@ -25,5 +25,7 @@ export const IPC_CHANNELS = {
     rankedEmblemUrl: 'lol:rankedEmblemUrl',
     riotPointsIconUrl: 'lol:riotPointsIconUrl',
     blueEssenceIconUrl: 'lol:blueEssenceIconUrl',
+    masteryBannerUrl: 'lol:masteryBannerUrl',
+    honorBadgeUrl: 'lol:honorBadgeUrl',
   },
 } as const;

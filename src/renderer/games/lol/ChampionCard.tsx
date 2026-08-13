@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react';
 import type { ChampionMasteryEntry } from '../../../shared/types/lol';
 import { getMasteryCrestDataUrl } from './masteryCrestCache';
+import { getMasteryBannerDataUrl } from './masteryBannerCache';
 
-// Fixed regardless of grid density, per the "never scale these" requirement.
-// The art is 800x900 (taller than wide), so width is derived from that ratio
-// rather than forcing a square and squashing it.
-const CREST_HEIGHT = 65;
-const CREST_WIDTH = Math.round(CREST_HEIGHT * (800 / 900));
-// Half the crest overflows below the portrait (straddling its bottom edge) —
-// reserve that space explicitly so it never overlaps the name.
-const CREST_OVERFLOW = CREST_HEIGHT / 2 - 6;
+// Crest+banner scale WITH grid density now (not fixed) — sized off the
+// card's own minCardWidth (see GridDensityContext) rather than a constant,
+// so the badge grows and shrinks along with the card instead of staying a
+// fixed size while everything around it resizes.
+const BADGE_SIZE_RATIO = 0.4;
 
-export function ChampionCard({ champion }: { champion: ChampionMasteryEntry }) {
+export function ChampionCard({
+  champion,
+  minCardWidth,
+}: {
+  champion: ChampionMasteryEntry;
+  minCardWidth: number;
+}) {
   const [crestUrl, setCrestUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +28,28 @@ export function ChampionCard({ champion }: { champion: ChampionMasteryEntry }) {
       cancelled = true;
     };
   }, [champion.masteryLevel]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMasteryBannerDataUrl(champion.masteryLevel).then((url) => {
+      if (!cancelled) setBannerUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [champion.masteryLevel]);
+
+  // Crest art is 800x900 (taller than wide); banner art is 78x50. Both
+  // derived from the same base so they scale together.
+  const crestHeight = minCardWidth * BADGE_SIZE_RATIO;
+  const crestWidth = crestHeight * (800 / 900);
+  const bannerWidth = crestWidth * 1.05;
+  const bannerHeight = bannerWidth * (50 / 78);
+  // Crest art fills only the center ~52% of its own canvas height, so the
+  // banner's top sits just past that opaque region — mostly peeking out
+  // below the crest rather than hidden behind it.
+  const bannerTop = crestHeight * 0.62;
+  const crestOverflow = crestHeight / 2 - 6;
 
   return (
     <div className="flex flex-col items-center gap-1 rounded border border-neutral-800 bg-neutral-900/50 p-2 text-center">
@@ -39,29 +66,47 @@ export function ChampionCard({ champion }: { champion: ChampionMasteryEntry }) {
           </div>
         )}
 
-        {/* Real per-level emblem art, straddling the portrait's bottom edge
-            (half over the art, half below it). No drawn banner shape behind
-            the number: the client's own mastery-banner-*.svg assets exist,
-            but nothing in its CSS or JS exposes which banner maps to which
-            level, and inventing that mapping would be a guess. */}
+        {/* Crest + banner as one badge, straddling the portrait's bottom
+            edge. Banner tier (0-3) is looked up from the real level->banner
+            mapping extracted from the client's own bundle — see
+            cdn/lol.ts's getMasteryBannerDataUrl comment for how it was
+            found; it's not a guessed grouping. */}
         {crestUrl && (
-          <img
-            src={crestUrl}
-            alt={`Mastery ${champion.masteryLevel}`}
-            className="pointer-events-none absolute left-1/2 z-10 object-contain"
+          <div
+            className="pointer-events-none absolute left-1/2 z-10"
             style={{
-              bottom: -CREST_HEIGHT / 2,
-              height: CREST_HEIGHT,
-              width: CREST_WIDTH,
+              bottom: -crestHeight / 2,
+              height: crestHeight,
+              width: crestWidth,
               transform: 'translateX(-50%)',
             }}
-          />
+          >
+            {bannerUrl && (
+              <img
+                src={bannerUrl}
+                alt=""
+                className="absolute left-1/2"
+                style={{
+                  top: bannerTop,
+                  width: bannerWidth,
+                  height: bannerHeight,
+                  transform: 'translateX(-50%)',
+                }}
+              />
+            )}
+            <img
+              src={crestUrl}
+              alt={`Mastery ${champion.masteryLevel}`}
+              className="absolute inset-0 object-contain"
+              style={{ height: crestHeight, width: crestWidth }}
+            />
+          </div>
         )}
       </div>
 
       <span
         className="w-full truncate text-xs"
-        style={crestUrl ? { marginTop: CREST_OVERFLOW } : undefined}
+        style={crestUrl ? { marginTop: crestOverflow } : undefined}
       >
         {champion.championName}
       </span>

@@ -22,7 +22,7 @@ export function SkinGrid({ title, skins }: { title?: string; skins: OwnedSkin[] 
         style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))` }}
       >
         {skins.map((skin) => (
-          <SkinCard key={skin.skinId} skin={skin} />
+          <SkinCard key={skin.skinId} skin={skin} minCardWidth={minCardWidth} />
         ))}
       </div>
     </div>

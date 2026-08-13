@@ -53,6 +53,10 @@ const lol: OracleLensBridge['lol'] = {
   getRiotPointsIconUrl: () => ipcRenderer.invoke(IPC_CHANNELS.lol.riotPointsIconUrl),
 
   getBlueEssenceIconUrl: () => ipcRenderer.invoke(IPC_CHANNELS.lol.blueEssenceIconUrl),
+
+  getMasteryBannerUrl: (level) => ipcRenderer.invoke(IPC_CHANNELS.lol.masteryBannerUrl, level),
+
+  getHonorBadgeUrl: (level) => ipcRenderer.invoke(IPC_CHANNELS.lol.honorBadgeUrl, level),
 };
 
 const oracleLens: OracleLensBridge = { core, lol };

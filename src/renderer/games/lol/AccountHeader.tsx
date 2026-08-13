@@ -1,12 +1,15 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { AccountSummary, RankedSummary, Wallet } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 import { ProfileIconBadge } from './ProfileIconBadge';
 import { RankBadge } from './RankBadge';
 import { MetaChip } from './MetaChip';
-import { HonorIcon, RefreshIcon, ServerIcon, SeasonIcon } from './metaIcons';
+import { RefreshIcon, ServerIcon, SeasonIcon } from './metaIcons';
 import { useStaticIconUrl } from './useStaticIconUrl';
 import { countryFlagEmoji } from './countryFlag';
+import { getHonorBadgeDataUrl } from './honorBadgeCache';
+
+const HONOR_BADGE_SIZE = 18;
 
 function formatNumber(value: number): string {
   return value.toLocaleString('en-US');
@@ -17,10 +20,49 @@ function CurrencyIcon({ url, alt }: { url: string | null; alt: string }) {
   return <img src={url} alt={alt} className="h-4 w-4 object-contain" />;
 }
 
+// The client's own honor badge art (badge-honor-1.svg .. badge-honor-5.svg,
+// verified against a live directory listing — see cdn/lol.ts). Levels 0 and
+// 6+ have no badge art in the client either, so those fall back to a plain
+// dot rather than pretending there's a real asset for them.
+function HonorBadge({ level }: { level: number }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getHonorBadgeDataUrl(level).then((result) => {
+      if (!cancelled) setUrl(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [level]);
+
+  if (!url) {
+    return (
+      <div
+        className="rounded-full bg-neutral-600"
+        style={{ height: HONOR_BADGE_SIZE, width: HONOR_BADGE_SIZE }}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt={`Honor ${level}`}
+      className="object-contain"
+      style={{ height: HONOR_BADGE_SIZE, width: HONOR_BADGE_SIZE }}
+    />
+  );
+}
+
 // Full-width, above the game rail and sidebar — see App.tsx. Two rows, never
 // horizontal scroll or overflow:
-//  - top: identity | both ranked queues | meta chips, `flex-wrap` so the
-//    chips group (and, if the window is narrow enough, the chips
+//  - top: identity | both ranked queues | meta chips, immediately after the
+//    ranked blocks (not pushed to the far edge — only the Refresh button
+//    gets `ml-auto`, so it's the one fixed point that never moves,
+//    regardless of window width or how many chips are showing). `flex-wrap`
+//    so the chips group (and, if the window is narrow enough, the chips
 //    themselves) drops to its own line instead of ever overflowing.
 //  - bottom: export controls, left-aligned under the profile icon.
 // Ranked and wallet arrive from separate fetches and can lag behind the
@@ -50,14 +92,11 @@ export function AccountHeader({
     <header className="flex w-full shrink-0 flex-col gap-2 border-b border-neutral-800 bg-neutral-900 px-6 py-2.5">
       <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex shrink-0 items-center gap-3">
-          {/* Small on purpose: the level border frame is ~2.7x the icon it
-              wraps (see ProfileIconBadge), so every px here costs ~2.7px of
-              header height. */}
           <ProfileIconBadge
             profileIconId={summary.profileIconId}
             accountLevel={summary.accountLevel}
             summonerName={summary.summonerName}
-            size={34}
+            size={42}
           />
           <div>
             <div className="text-base font-semibold leading-tight">{summary.summonerName}</div>
@@ -74,7 +113,9 @@ export function AccountHeader({
           </div>
         )}
 
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+        {/* No ml-auto here on purpose — these stay right next to the ranked
+            blocks instead of drifting to the far edge as the window widens. */}
+        <div className="flex flex-wrap items-center gap-1.5">
           {wallet && (
             <>
               <MetaChip
@@ -90,7 +131,7 @@ export function AccountHeader({
             </>
           )}
           <MetaChip
-            icon={<HonorIcon size={16} />}
+            icon={<HonorBadge level={summary.honorLevel} />}
             label={t('accountSummary.honor')}
             value={String(summary.honorLevel)}
           />
@@ -115,17 +156,22 @@ export function AccountHeader({
           )}
         </div>
 
+        {/* The one element that always anchors to the far right, regardless
+            of how much (or little) else is in this row — a fixed, visible,
+            predictable spot rather than wherever the chip-wrapping happens
+            to leave room. */}
         <button
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
           title={t('accountSummary.refresh')}
           aria-label={t('accountSummary.refresh')}
-          className="flex shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800/70 p-1.5 text-neutral-300 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="ml-auto flex shrink-0 items-center gap-2 rounded-md border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <span className={isRefreshing ? 'animate-spin' : ''}>
-            <RefreshIcon size={14} />
+            <RefreshIcon size={15} />
           </span>
+          {t('accountSummary.refresh')}
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 // Small generic UI glyphs for meta chips that have no corresponding Riot
-// asset we could verify a path for (honor, server, season) — hand-drawn
-// original shapes, not Riot IP, not fetched from any CDN.
+// asset we could verify a path for (server, season — honor has a real one
+// now, see HonorBadge in AccountHeader.tsx) — hand-drawn original shapes,
+// not Riot IP, not fetched from any CDN.
 
 function IconBase({
   size,
@@ -22,14 +23,6 @@ function IconBase({
     >
       {children}
     </svg>
-  );
-}
-
-export function HonorIcon({ size = 16 }: { size?: number }) {
-  return (
-    <IconBase size={size}>
-      <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z" />
-    </IconBase>
   );
 }
 

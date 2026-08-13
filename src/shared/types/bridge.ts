@@ -41,6 +41,8 @@ export interface LolBridge {
   getRankedEmblemUrl(tier: string): Promise<string | null>;
   getRiotPointsIconUrl(): Promise<string | null>;
   getBlueEssenceIconUrl(): Promise<string | null>;
+  getMasteryBannerUrl(level: number): Promise<string | null>;
+  getHonorBadgeUrl(level: number): Promise<string | null>;
 }
 
 export interface OracleLensBridge {

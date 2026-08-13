@@ -4,13 +4,11 @@ import { t } from '../../core/i18n';
 import { getRarityGemDataUrl } from './rarityGemCache';
 import { rarityLabel } from './rarity';
 
-// Fixed regardless of grid density, per the "never scale these" requirement.
-const GEM_SIZE = 24;
-// Half the gem overflows below the tile (straddling its bottom edge) —
-// reserve that space explicitly so it never overlaps the name.
-const GEM_OVERFLOW = GEM_SIZE / 2 - 2;
+// Scales WITH grid density now (not fixed) — see the matching comment in
+// ChampionCard.tsx.
+const GEM_SIZE_RATIO = 0.4;
 
-export function SkinCard({ skin }: { skin: OwnedSkin }) {
+export function SkinCard({ skin, minCardWidth }: { skin: OwnedSkin; minCardWidth: number }) {
   const [gemUrl, setGemUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,6 +24,9 @@ export function SkinCard({ skin }: { skin: OwnedSkin }) {
       cancelled = true;
     };
   }, [skin.rarity]);
+
+  const gemSize = minCardWidth * GEM_SIZE_RATIO;
+  const gemOverflow = gemSize / 2 - 2;
 
   return (
     <div className="flex flex-col items-center gap-1 rounded border border-neutral-800 bg-neutral-900/50 p-2 text-center">
@@ -47,16 +48,16 @@ export function SkinCard({ skin }: { skin: OwnedSkin }) {
             title={rarityLabel(skin.rarity)}
             className="absolute left-1/2 z-10"
             style={{
-              bottom: -GEM_SIZE / 2,
-              height: GEM_SIZE,
-              width: GEM_SIZE,
+              bottom: -gemSize / 2,
+              height: gemSize,
+              width: gemSize,
               transform: 'translateX(-50%)',
             }}
           />
         )}
       </div>
 
-      <span className="w-full truncate text-xs" style={gemUrl ? { marginTop: GEM_OVERFLOW } : undefined}>
+      <span className="w-full truncate text-xs" style={gemUrl ? { marginTop: gemOverflow } : undefined}>
         {skin.name}
       </span>
 

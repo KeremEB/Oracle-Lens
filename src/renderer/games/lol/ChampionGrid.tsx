@@ -39,7 +39,7 @@ export function ChampionGrid({
         style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))` }}
       >
         {visibleChampions.map((champion) => (
-          <ChampionCard key={champion.championId} champion={champion} />
+          <ChampionCard key={champion.championId} champion={champion} minCardWidth={minCardWidth} />
         ))}
       </div>
     </div>
