@@ -6,7 +6,7 @@ import { rarityLabel } from './rarity';
 
 // Scales WITH grid density now (not fixed) — see the matching comment in
 // ChampionCard.tsx.
-const GEM_SIZE_RATIO = 0.4;
+const GEM_SIZE_RATIO = 0.25;
 
 export function SkinCard({ skin, minCardWidth }: { skin: OwnedSkin; minCardWidth: number }) {
   const [gemUrl, setGemUrl] = useState<string | null>(null);

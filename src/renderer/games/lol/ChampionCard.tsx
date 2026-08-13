@@ -7,7 +7,7 @@ import { getMasteryBannerDataUrl } from './masteryBannerCache';
 // card's own minCardWidth (see GridDensityContext) rather than a constant,
 // so the badge grows and shrinks along with the card instead of staying a
 // fixed size while everything around it resizes.
-const BADGE_SIZE_RATIO = 0.4;
+const BADGE_SIZE_RATIO = 0.6;
 
 export function ChampionCard({
   champion,
@@ -49,7 +49,7 @@ export function ChampionCard({
   // banner's top sits just past that opaque region — mostly peeking out
   // below the crest rather than hidden behind it.
   const bannerTop = crestHeight * 0.62;
-  const crestOverflow = crestHeight / 2 - 6;
+  const crestOverflow = crestHeight / 2 + 6;
 
   return (
     <div className="flex flex-col items-center gap-1 rounded border border-neutral-800 bg-neutral-900/50 p-2 text-center">
