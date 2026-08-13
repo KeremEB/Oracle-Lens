@@ -597,3 +597,38 @@ export async function getLevelBorderDataUrl(accountLevel: number): Promise<strin
     return null;
   }
 }
+
+// Loot tile art lives under two different path conventions — verified live
+// against a real account's /lol-loot/v1/player-loot response. Most items
+// (skins, ward skins, summoner icons, Mythic Essence) reuse the normal
+// "/lol-game-data/assets/..." convention (resolveGameDataAssetUrl), but
+// generic loot-system art (chest icons, currency icons) is served from the
+// rcp-fe-lol-loot plugin instead, under "/fe/lol-loot/assets/...".
+function resolveLootAssetUrl(lootAssetPath: string): string {
+  if (/^\/fe\/lol-loot\//i.test(lootAssetPath)) {
+    const relative = lootAssetPath.replace(/^\/fe\/lol-loot\//i, '').toLowerCase();
+    return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-loot/global/default/${relative}`;
+  }
+  return resolveGameDataAssetUrl(lootAssetPath);
+}
+
+export async function getLootItemImageDataUrl(
+  lootName: string,
+  tilePath: string,
+): Promise<string | null> {
+  if (!tilePath) return null;
+
+  const isJpg = tilePath.toLowerCase().endsWith('.jpg');
+
+  try {
+    const remoteUrl = resolveLootAssetUrl(tilePath);
+    return await getCachedAssetDataUrl(
+      `lol/loot/${lootName}.${isJpg ? 'jpg' : 'png'}`,
+      remoteUrl,
+      isJpg ? 'image/jpeg' : 'image/png',
+    );
+  } catch (err) {
+    console.warn(`[cdn] failed to fetch loot image for ${lootName}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}

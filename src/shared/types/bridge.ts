@@ -6,6 +6,7 @@ import type { SaveExportRequest, SaveExportResult } from './export';
 import type {
   AccountSummary,
   ChampionMasteryEntry,
+  LootItem,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
@@ -43,6 +44,7 @@ export interface LolBridge {
   getBlueEssenceIconUrl(): Promise<string | null>;
   getMasteryBannerUrl(level: number): Promise<string | null>;
   getHonorBadgeUrl(level: number): Promise<string | null>;
+  getPlayerLoot(): Promise<LootItem[]>;
 }
 
 export interface OracleLensBridge {

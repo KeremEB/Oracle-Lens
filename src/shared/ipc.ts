@@ -27,5 +27,6 @@ export const IPC_CHANNELS = {
     blueEssenceIconUrl: 'lol:blueEssenceIconUrl',
     masteryBannerUrl: 'lol:masteryBannerUrl',
     honorBadgeUrl: 'lol:honorBadgeUrl',
+    playerLoot: 'lol:playerLoot',
   },
 } as const;

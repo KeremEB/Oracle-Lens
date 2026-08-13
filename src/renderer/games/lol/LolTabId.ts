@@ -5,4 +5,5 @@ export type LolTabId =
   | 'wardSkins'
   | 'emotes'
   | 'profileIcons'
+  | 'loot'
   | 'history';

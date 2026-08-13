@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 export interface SidebarNavItem {
   id: string;
   label: string;
@@ -6,6 +8,8 @@ export interface SidebarNavItem {
    * "not applicable here", which matters for things like History that
    * aren't wired up to real data yet. */
   count?: number;
+  /** Renders a thin divider above this item — used to break the list into logical groups. */
+  dividerBefore?: boolean;
 }
 
 const SIDEBAR_WIDTH = 224; // ~220px per spec
@@ -30,23 +34,25 @@ export function SidebarNav({
       style={{ width: SIDEBAR_WIDTH, minWidth: SIDEBAR_MIN_WIDTH }}
     >
       {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onSelect(item.id)}
-          className={
-            item.id === activeId
-              ? 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-100 bg-neutral-800'
-              : 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'
-          }
-        >
-          <span className="truncate">{item.label}</span>
-          {typeof item.count === 'number' && (
-            <span className="ml-2 shrink-0 rounded-full bg-neutral-700/70 px-1.5 py-0.5 text-[11px] tabular-nums text-neutral-300">
-              {item.count.toLocaleString('en-US')}
-            </span>
-          )}
-        </button>
+        <Fragment key={item.id}>
+          {item.dividerBefore && <div className="my-1 border-t border-neutral-800" />}
+          <button
+            type="button"
+            onClick={() => onSelect(item.id)}
+            className={
+              item.id === activeId
+                ? 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-100 bg-neutral-800'
+                : 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'
+            }
+          >
+            <span className="truncate">{item.label}</span>
+            {typeof item.count === 'number' && (
+              <span className="ml-2 shrink-0 rounded-full bg-neutral-700/70 px-1.5 py-0.5 text-[11px] tabular-nums text-neutral-300">
+                {item.count.toLocaleString('en-US')}
+              </span>
+            )}
+          </button>
+        </Fragment>
       ))}
     </nav>
   );

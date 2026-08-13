@@ -78,6 +78,11 @@ export default function App() {
     () => window.oracleLens.lol.getOwnedProfileIcons(),
     refreshKey,
   );
+  const loot = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getPlayerLoot(),
+    refreshKey,
+  );
 
   const connected = connectionState === 'connected' && summary.data;
   const isRefreshing = [
@@ -90,6 +95,7 @@ export default function App() {
     wardSkins,
     emotes,
     profileIcons,
+    loot,
   ].some((resource) => resource.loading);
 
   return (
@@ -140,6 +146,7 @@ export default function App() {
             wardSkins={wardSkins}
             emotes={emotes}
             profileIcons={profileIcons}
+            loot={loot}
           />
         ) : (
           <div className="flex flex-1 items-center justify-center">

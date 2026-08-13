@@ -8,6 +8,7 @@ import type {
 import type {
   AccountSummary,
   ChampionMasteryEntry,
+  LootItem,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
@@ -27,6 +28,7 @@ import { getSkinsMinimal } from './endpoints/skins';
 import { getWardSkins } from './endpoints/wardSkins';
 import { getEmoteInventory, getProfileIconInventory } from './endpoints/inventory';
 import { getWallet as getWalletRaw } from './endpoints/wallet';
+import { getPlayerLoot as getPlayerLootRaw } from './endpoints/loot';
 import { getRsoUserInfo } from './endpoints/rsoAuth';
 import { getAllSeasons } from './endpoints/seasons';
 import { mapAccountSummary } from './mappers/accountSummary';
@@ -38,6 +40,7 @@ import { mapOwnedWardSkins } from './mappers/wardSkins';
 import { mapOwnedEmotes } from './mappers/emotes';
 import { mapOwnedProfileIcons } from './mappers/profileIcons';
 import { mapWallet } from './mappers/wallet';
+import { mapPlayerLoot } from './mappers/loot';
 import {
   getBlueEssenceIconDataUrl,
   getHonorBadgeDataUrl,
@@ -92,6 +95,7 @@ export class LeagueOfLegendsProvider implements GameProvider {
     'skins',
     'chromas',
     'collectibles',
+    'loot',
   ];
 
   private status: ConnectionStatus = { state: 'unavailable' };
@@ -339,6 +343,13 @@ export class LeagueOfLegendsProvider implements GameProvider {
     return this.withCredentials(async (credentials) => {
       const raw = await getWalletRaw(credentials);
       return mapWallet(raw);
+    });
+  }
+
+  async getPlayerLoot(): Promise<LootItem[]> {
+    return this.withCredentials(async (credentials) => {
+      const raw = await getPlayerLootRaw(credentials);
+      return mapPlayerLoot(raw);
     });
   }
 

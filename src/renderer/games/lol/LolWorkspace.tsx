@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type {
   ChampionMasteryEntry,
+  LootItem,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
@@ -19,6 +20,7 @@ import { ChromasSection } from './ChromasSection';
 import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
+import { LootSection } from './LootSection';
 import type { LolTabId } from './LolTabId';
 
 // Individual chromas owned, not "skins that have any chroma" — matches
@@ -37,6 +39,7 @@ export function LolWorkspace({
   wardSkins,
   emotes,
   profileIcons,
+  loot,
 }: {
   champions: LolResource<ChampionMasteryEntry[]>;
   skins: LolResource<OwnedSkin[]>;
@@ -44,6 +47,7 @@ export function LolWorkspace({
   wardSkins: LolResource<OwnedWardSkin[]>;
   emotes: LolResource<OwnedEmote[]>;
   profileIcons: LolResource<OwnedProfileIcon[]>;
+  loot: LolResource<LootItem[]>;
 }) {
   const [activeTab, setActiveTab] = useState<LolTabId>('champions');
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,9 +62,13 @@ export function LolWorkspace({
     { id: 'wardSkins', label: t('wardSkins.title'), count: wardSkins.data?.length },
     { id: 'emotes', label: t('emotes.title'), count: emotes.data?.length },
     { id: 'profileIcons', label: t('profileIcons.title'), count: profileIcons.data?.length },
+    // Loot is the player's unclaimed inventory, entirely separate from the
+    // owned-collection tabs above — dividerBefore breaks it into its own
+    // visual group rather than reading as one more collection tab.
+    { id: 'loot', label: t('loot.title'), count: loot.data?.length, dividerBefore: true },
     // No count: history isn't wired to real data yet, and 0 would misread
     // as "checked, found nothing" rather than "not built yet".
-    { id: 'history', label: t('history.title') },
+    { id: 'history', label: t('history.title'), dividerBefore: true },
   ];
 
   return (
@@ -157,6 +165,14 @@ export function LolWorkspace({
                 {profileIcons.data && (
                   <ProfileIconsSection icons={profileIcons.data} searchQuery={searchQuery} />
                 )}
+              </>
+            )}
+
+            {activeTab === 'loot' && (
+              <>
+                {loot.error && <p className="text-red-400">{loot.error}</p>}
+                {!loot.error && !loot.data && <p className="text-neutral-400">{t('loot.loading')}</p>}
+                {loot.data && <LootSection items={loot.data} searchQuery={searchQuery} />}
               </>
             )}
 

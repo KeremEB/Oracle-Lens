@@ -60,6 +60,7 @@ ipcMain.handle(IPC_CHANNELS.lol.masteryBannerUrl, (_event, level: number) =>
 ipcMain.handle(IPC_CHANNELS.lol.honorBadgeUrl, (_event, level: number) =>
   lolProvider.getHonorBadgeUrl(level),
 );
+ipcMain.handle(IPC_CHANNELS.lol.playerLoot, () => lolProvider.getPlayerLoot());
 
 lolProvider.onStatusChange((status) => {
   for (const win of BrowserWindow.getAllWindows()) {

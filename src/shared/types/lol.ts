@@ -134,3 +134,53 @@ export interface OwnedProfileIcon {
   /** null when the CDN image couldn't be fetched — render a placeholder. */
   imageDataUrl: string | null;
 }
+
+// Loot is the player's UNCLAIMED inventory (shards, chests, keys, crafting
+// materials) — entirely separate from the "owned" collections above. An item
+// showing up here says nothing about whether the underlying champion/skin/
+// ward/emote is owned; owned-collection counts must never include it.
+//
+// Categories mirror the real client's own grouping (verified against
+// Community Dragon's rcp-fe-lol-loot translation strings and a live
+// account's /lol-loot/v1/player-loot response), with the client's single
+// "Materials" bucket (CHEST display category) split in two per the user's
+// request: real chests/keys vs. Mythic Essence (Gemstone is fully retired
+// game content as of this writing but is grouped the same way if it's ever
+// seen on an older account).
+export type LootCategory =
+  | 'championShards'
+  | 'skinShards'
+  | 'wardsAndEmotes'
+  | 'chestsKeysOrbs'
+  | 'materials'
+  | 'other';
+
+/** Rarest-to-broadest is meaningless here; this is just the fixed display order. */
+export const LOOT_CATEGORY_ORDER: readonly LootCategory[] = [
+  'championShards',
+  'skinShards',
+  'wardsAndEmotes',
+  'chestsKeysOrbs',
+  'materials',
+  'other',
+];
+
+export interface LootCurrencyAmount {
+  amount: number;
+  /** Human label resolved from the LCU's own currency lootName, e.g. "Orange Essence". */
+  label: string;
+}
+
+export interface LootItem {
+  /** The LCU's own stable identifier, e.g. "CHAMPION_SKIN_RENTAL_164002" — used as the React key. */
+  lootName: string;
+  name: string;
+  category: LootCategory;
+  count: number;
+  /** null when the CDN tile image couldn't be fetched — render a placeholder. */
+  imageDataUrl: string | null;
+  /** Absent when disenchanting yields nothing (e.g. chests, currencies). */
+  disenchantValue?: LootCurrencyAmount;
+  /** Absent when there's no direct unlock cost (e.g. already permanent, or not craftable). */
+  unlockCost?: LootCurrencyAmount;
+}

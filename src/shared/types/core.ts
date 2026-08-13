@@ -20,7 +20,8 @@ export type GameCapability =
   | 'champions'
   | 'skins'
   | 'chromas'
-  | 'collectibles';
+  | 'collectibles'
+  | 'loot';
 
 export interface GameProvider {
   readonly id: GameId;
