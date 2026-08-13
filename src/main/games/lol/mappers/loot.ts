@@ -1,6 +1,23 @@
-import type { LootCategory, LootCurrencyAmount, LootItem } from '../../../../shared/types/lol';
+import {
+  SKIN_RARITY_ORDER,
+  type LootCategory,
+  type LootCurrencyAmount,
+  type LootItem,
+  type SkinRarity,
+} from '../../../../shared/types/lol';
 import type { LcuLootItem } from '../endpoints/loot';
 import { getLootItemImageDataUrl } from '../../../core/cdn/lol';
+
+// Verified live: the LCU's loot rarity strings ("EPIC", "LEGENDARY", ... —
+// "DEFAULT" for anything without a real rarity) are simply the app's own
+// SkinRarity values upper-cased, so a lowercase covers it without a
+// hand-typed table that could drift from shared/types/lol.ts.
+const KNOWN_RARITIES = new Set<string>(SKIN_RARITY_ORDER);
+
+function parseLootRarity(rawRarity: string): SkinRarity | undefined {
+  const lower = rawRarity.toLowerCase();
+  return KNOWN_RARITIES.has(lower) ? (lower as SkinRarity) : undefined;
+}
 
 // Verified live against Community Dragon's rcp-fe-lol-loot en_us trans.json
 // (loot_name_currency_* keys) — the LCU never localizes these currency
@@ -77,6 +94,10 @@ export async function mapPlayerLoot(raw: LcuLootItem[]): Promise<LootItem[]> {
         category,
         count: item.count,
         imageDataUrl: await getLootItemImageDataUrl(item.lootName, item.tilePath),
+        // Only skin shards ever show a gem — chests/keys/materials/etc. can
+        // still carry a "DEFAULT" rarity string from the LCU, but that's not
+        // a real rarity tier and parseLootRarity already drops it.
+        rarity: category === 'skinShards' ? parseLootRarity(item.rarity) : undefined,
         disenchantValue: currencyAmount(item.disenchantValue, item.disenchantLootName),
         unlockCost: currencyAmount(item.upgradeEssenceValue, item.upgradeEssenceName),
       }),

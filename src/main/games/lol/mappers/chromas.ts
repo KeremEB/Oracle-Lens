@@ -47,5 +47,17 @@ export async function mapOwnedChromas(
     },
   );
 
-  return perChampion.flat();
+  // Defensive dedup by skinId: some accounts see the same skin group come
+  // back from more than one per-champion query (observed live; the LCU
+  // doesn't document why — possibly a skin cross-linked to more than one
+  // champion ID). A real chroma group should never legitimately appear
+  // twice, so collapse rather than try to prove which query "owns" it.
+  const seen = new Set<number>();
+  const deduped: SkinChromaGroup[] = [];
+  for (const group of perChampion.flat()) {
+    if (seen.has(group.skinId)) continue;
+    seen.add(group.skinId);
+    deduped.push(group);
+  }
+  return deduped;
 }

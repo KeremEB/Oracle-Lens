@@ -19,7 +19,7 @@ export function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
         <dt className="text-neutral-500">{t('accountSummary.accountLevel')}</dt>
         <dd>{summary.accountLevel}</dd>
 
-        <dt className="text-neutral-400">{t('accountSummary.region')}</dt>S
+        <dt className="text-neutral-400">{t('accountSummary.region')}</dt>
         <dd>{summary.region}</dd>
 
         <dt className="text-neutral-400">{t('accountSummary.honorLevel')}</dt>

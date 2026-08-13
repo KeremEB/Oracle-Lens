@@ -19,7 +19,7 @@ export function LootGrid({ title, items }: { title: string; items: LootItem[] })
         style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))` }}
       >
         {items.map((item) => (
-          <LootCard key={item.lootName} item={item} />
+          <LootCard key={item.lootName} item={item} minCardWidth={minCardWidth} />
         ))}
       </div>
     </div>

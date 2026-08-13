@@ -75,7 +75,20 @@ export function ExportCaptureTree({
 
   return (
     <div className="flex flex-col gap-10">
-      <div data-export-section="accountDetails" data-export-label={exportSectionLabel('accountDetails')}>
+      {/*
+        self-start: the root is a column flex container, whose default
+        align-items:stretch would otherwise stretch this section to match
+        the widest sibling (a large Champions/Skins grid can be thousands of
+        px wide — see exportLayout.ts) even though this card's own content
+        is a fixed 900px. Every other section already opts out of stretch by
+        having its own explicit width; this is the one section that has
+        none, since its content isn't a width-computed grid.
+      */}
+      <div
+        data-export-section="accountDetails"
+        data-export-label={exportSectionLabel('accountDetails')}
+        className="self-start"
+      >
         <ExportTitleBand
           summonerName={summary.summonerName}
           region={summary.region}

@@ -13,6 +13,8 @@ export interface LcuLootItem {
   type: string;
   /** The real client's own grouping key, e.g. "SKIN", "WARDSKIN", "CHEST" — see mappers/loot.ts. */
   displayCategories: string;
+  /** Verified live: "EPIC"/"LEGENDARY"/etc. for skins, "DEFAULT" for everything without a real rarity — see mappers/loot.ts's parseLootRarity. */
+  rarity: string;
   count: number;
   /** Populated for real content; blank for currencies/chests, which don't disenchant into anything. */
   localizedName: string;

@@ -23,15 +23,39 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+export interface ImageReadiness {
+  /** Ground truth for "html2canvas has real pixels to paint" — re-verified after waiting, not assumed from decode()/load succeeding. */
+  ready: boolean;
+  timedOut: boolean;
+}
+
 /**
- * Resolves once `img` is decoded and ready to paint, or has definitively
+ * Resolves once `img` has real pixel data to paint, or has definitively
  * failed/timed out — never rejects, so one broken image never aborts an
- * export. `decode()` is a stronger readiness signal than `.complete`/`load`
- * alone (it waits for the browser to actually finish decoding pixel data,
- * not just for the network/data-URL fetch to resolve).
+ * export.
+ *
+ * Readiness is `complete && naturalWidth > 0`, checked fresh after waiting
+ * rather than trusted from decode()/load having fired: an image restored
+ * from the browser's own image cache frequently does NOT dispatch a new
+ * 'load' event at all (no network activity occurs, so nothing triggers it),
+ * and — separately — `decode()` resolving does not always mean
+ * `naturalWidth` is synchronously queryable in the same tick on every
+ * engine. If a fresh check right after decode()/load still comes back not
+ * ready and we haven't timed out, one more paint frame is given before
+ * giving up — cheap, bounded, and covers that specific timing gap without
+ * re-running the full 8s wait.
  */
-function waitForImage(img: HTMLImageElement): Promise<void> {
-  if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+function waitForImage(img: HTMLImageElement): Promise<ImageReadiness> {
+  const check = (): boolean => img.complete && img.naturalWidth > 0;
+  if (check()) return Promise.resolve({ ready: true, timedOut: false });
+
+  let timedOut = false;
+  const timeout = new Promise<void>((resolve) => {
+    setTimeout(() => {
+      timedOut = true;
+      resolve();
+    }, IMAGE_TIMEOUT_MS);
+  });
 
   const settle: Promise<void> =
     typeof img.decode === 'function'
@@ -41,7 +65,12 @@ function waitForImage(img: HTMLImageElement): Promise<void> {
           img.addEventListener('error', () => resolve(), { once: true });
         });
 
-  return Promise.race([settle, new Promise<void>((resolve) => setTimeout(resolve, IMAGE_TIMEOUT_MS))]);
+  return Promise.race([settle, timeout]).then(async () => {
+    if (check()) return { ready: true, timedOut };
+    if (timedOut) return { ready: false, timedOut: true };
+    await nextFrame();
+    return { ready: check(), timedOut: false };
+  });
 }
 
 /**
@@ -63,29 +92,42 @@ function waitForImage(img: HTMLImageElement): Promise<void> {
  */
 async function waitForImagesToSettle(
   container: HTMLElement,
+  sectionLabel: string,
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
-  const settled = new Set<HTMLImageElement>();
+  const results = new Map<HTMLImageElement, ImageReadiness>();
   const deadline = Date.now() + MAX_SETTLE_WAIT_MS;
   let stableRounds = 0;
   let previousTotal = -1;
 
   while (Date.now() < deadline) {
     const current = Array.from(container.querySelectorAll('img'));
-    const unsettled = current.filter((img) => !settled.has(img));
+    // Re-check anything not yet confirmed ready — including images that
+    // came back not-ready-but-not-timed-out on a previous round, since
+    // that's specifically the "needs one more frame" case waitForImage
+    // already gives one retry for; letting the outer loop's own next round
+    // effectively give it another doesn't cost anything for images that
+    // ARE already ready (the check() fast path is synchronous).
+    const toCheck = current.filter((img) => results.get(img)?.ready !== true);
 
-    if (unsettled.length > 0) {
+    if (toCheck.length > 0) {
       await Promise.all(
-        unsettled.map((img) =>
-          waitForImage(img).then(() => {
-            settled.add(img);
-            onProgress?.(settled.size, current.length);
+        toCheck.map((img) =>
+          waitForImage(img).then((result) => {
+            results.set(img, result);
+            const readyCount = [...results.values()].filter((r) => r.ready).length;
+            onProgress?.(readyCount, current.length);
           }),
         ),
       );
     }
 
-    if (current.length === previousTotal && unsettled.length === 0) {
+    const stillPending = current.some((img) => {
+      const result = results.get(img);
+      return !result?.ready && !result?.timedOut;
+    });
+
+    if (current.length === previousTotal && !stillPending) {
       stableRounds++;
       if (stableRounds >= STABLE_ROUNDS_REQUIRED) break;
     } else {
@@ -94,6 +136,21 @@ async function waitForImagesToSettle(
     previousTotal = current.length;
 
     await nextFrame();
+  }
+
+  const failed = [...results.entries()].filter(([, result]) => !result.ready);
+  const readyCount = results.size - failed.length;
+  console.info(`[export] ${sectionLabel}: ${readyCount}/${results.size} images ready for capture`);
+  if (failed.length > 0) {
+    console.warn(
+      `[export] ${sectionLabel}: ${failed.length} image(s) not ready — will be captured as-is (blank/placeholder area), export continues:`,
+      failed.map(([img, result]) => ({
+        src: img.src.length > 100 ? `${img.src.slice(0, 100)}…` : img.src,
+        timedOut: result.timedOut,
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+      })),
+    );
   }
 }
 
@@ -158,7 +215,7 @@ export async function captureReportSections(
     const key = el.dataset.exportSection ?? String(i);
     const label = el.dataset.exportLabel ?? key;
 
-    await waitForImagesToSettle(el, (done, total) => onImageProgress?.(done, total, label));
+    await waitForImagesToSettle(el, label, (done, total) => onImageProgress?.(done, total, label));
 
     onSectionProgress?.(i, sectionEls.length, label);
     results.push({ key, label, canvas: await captureElement(el) });

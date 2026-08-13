@@ -181,6 +181,8 @@ export interface LootItem {
   count: number;
   /** null when the CDN tile image couldn't be fetched — render a placeholder. */
   imageDataUrl: string | null;
+  /** Only populated for `category === 'skinShards'` — chests, keys, materials, etc. never carry a gem regardless of what the LCU reports. */
+  rarity?: SkinRarity;
   /** Absent when disenchanting yields nothing (e.g. chests, currencies). */
   disenchantValue?: LootCurrencyAmount;
   /** Absent when there's no direct unlock cost (e.g. already permanent, or not craftable). */
