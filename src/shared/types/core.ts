@@ -49,3 +49,26 @@ export interface GameProvider {
 export interface Preferences {
   gridDensityIndex?: number;
 }
+
+// A saved snapshot of "an account as it was displayed" — per CLAUDE.md's
+// Persistence section: "account ID plus displayed data only, tagged by
+// game." Core only knows the generic shape; the actual `data` payload is a
+// per-game type (e.g. LolAccountSnapshotData in shared/types/lol.ts) that
+// core never inspects. Split into a lightweight Meta (for cheap list
+// rendering) and the full Snapshot (Meta + data, loaded only when a specific
+// entry is opened) — see src/main/core/store/snapshots.ts.
+export interface AccountSnapshotMeta {
+  id: string;
+  gameId: GameId;
+  /** Per-game account identifier (e.g. "euw1:12345") — NOT used to dedupe; the same account viewed again still gets a new entry. */
+  accountKey: string;
+  /** Display name for the history list, e.g. the summoner name. */
+  label: string;
+  /** Secondary display line for the history list, e.g. the region. */
+  subtitle: string;
+  capturedAt: number;
+}
+
+export interface AccountSnapshot<TData = unknown> extends AccountSnapshotMeta {
+  data: TData;
+}

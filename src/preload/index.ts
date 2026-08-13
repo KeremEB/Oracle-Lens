@@ -10,6 +10,16 @@ const core: OracleLensBridge['core'] = {
     ipcRenderer.invoke(IPC_CHANNELS.core.setPreference, key, value),
 
   saveExportFile: (request) => ipcRenderer.invoke(IPC_CHANNELS.core.saveExportFile, request),
+
+  listSnapshots: (gameId) => ipcRenderer.invoke(IPC_CHANNELS.core.listSnapshots, gameId),
+
+  getSnapshot: (id) => ipcRenderer.invoke(IPC_CHANNELS.core.getSnapshot, id),
+
+  saveSnapshot: (input) => ipcRenderer.invoke(IPC_CHANNELS.core.saveSnapshot, input),
+
+  deleteSnapshot: (id) => ipcRenderer.invoke(IPC_CHANNELS.core.deleteSnapshot, id),
+
+  clearSnapshots: (gameId) => ipcRenderer.invoke(IPC_CHANNELS.core.clearSnapshots, gameId),
 };
 
 const lol: OracleLensBridge['lol'] = {

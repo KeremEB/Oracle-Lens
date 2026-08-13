@@ -5,6 +5,11 @@ export const IPC_CHANNELS = {
     getPreferences: 'core:getPreferences',
     setPreference: 'core:setPreference',
     saveExportFile: 'core:saveExportFile',
+    listSnapshots: 'core:listSnapshots',
+    getSnapshot: 'core:getSnapshot',
+    saveSnapshot: 'core:saveSnapshot',
+    deleteSnapshot: 'core:deleteSnapshot',
+    clearSnapshots: 'core:clearSnapshots',
   },
   lol: {
     connectionStatus: 'lol:connectionStatus',

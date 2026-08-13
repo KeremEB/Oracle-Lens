@@ -2,11 +2,18 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { getPreferences, setPreference } from './core/store/preferences';
+import {
+  clearSnapshots,
+  deleteSnapshot,
+  getSnapshot,
+  listSnapshots,
+  saveSnapshot,
+} from './core/store/snapshots';
 import { saveExportFile } from './core/export/saveExportFile';
 import type { SaveExportRequest } from '../shared/types/export';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
 import { IPC_CHANNELS } from '../shared/ipc';
-import type { Preferences } from '../shared/types/core';
+import type { GameId, Preferences } from '../shared/types/core';
 import type { SkinRarity } from '../shared/types/lol';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -26,6 +33,21 @@ ipcMain.handle(
 ipcMain.handle(IPC_CHANNELS.core.saveExportFile, (event, request: SaveExportRequest) =>
   saveExportFile(BrowserWindow.fromWebContents(event.sender), request),
 );
+
+ipcMain.handle(IPC_CHANNELS.core.listSnapshots, (_event, gameId?: GameId) => listSnapshots(gameId));
+ipcMain.handle(IPC_CHANNELS.core.getSnapshot, (_event, id: string) => getSnapshot(id));
+ipcMain.handle(
+  IPC_CHANNELS.core.saveSnapshot,
+  (
+    _event,
+    input: { gameId: GameId; accountKey: string; label: string; subtitle: string; data: unknown },
+  ) => {
+    const { data, ...meta } = input;
+    return saveSnapshot(meta, data);
+  },
+);
+ipcMain.handle(IPC_CHANNELS.core.deleteSnapshot, (_event, id: string) => deleteSnapshot(id));
+ipcMain.handle(IPC_CHANNELS.core.clearSnapshots, (_event, gameId?: GameId) => clearSnapshots(gameId));
 
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
 ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());

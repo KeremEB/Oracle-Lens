@@ -35,6 +35,7 @@ export function mapAccountSummary({
   seasons,
 }: RawAccountSummary): AccountSummary {
   return {
+    accountId: summoner.summonerId,
     summonerName:
       summoner.gameName && summoner.tagLine
         ? `${summoner.gameName}#${summoner.tagLine}`

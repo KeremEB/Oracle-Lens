@@ -9,6 +9,7 @@ import type {
   SkinChromaGroup,
   SkinRarity,
 } from '../../../shared/types/lol';
+import type { AccountSnapshotMeta } from '../../../shared/types/core';
 import { t } from '../../core/i18n';
 import type { LolResource } from '../../core/useLolResource';
 import { SidebarNav, type SidebarNavItem } from '../../core/SidebarNav';
@@ -21,6 +22,7 @@ import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
 import { LootSection } from './LootSection';
+import { HistorySection } from './HistorySection';
 import type { LolTabId } from './LolTabId';
 
 // Individual chromas owned, not "skins that have any chroma" — matches
@@ -40,6 +42,11 @@ export function LolWorkspace({
   emotes,
   profileIcons,
   loot,
+  snapshots,
+  activeSnapshotId,
+  onViewSnapshot,
+  onDeleteSnapshot,
+  onClearSnapshots,
 }: {
   champions: LolResource<ChampionMasteryEntry[]>;
   skins: LolResource<OwnedSkin[]>;
@@ -48,6 +55,11 @@ export function LolWorkspace({
   emotes: LolResource<OwnedEmote[]>;
   profileIcons: LolResource<OwnedProfileIcon[]>;
   loot: LolResource<LootItem[]>;
+  snapshots: AccountSnapshotMeta[];
+  activeSnapshotId: string | null;
+  onViewSnapshot: (id: string) => void;
+  onDeleteSnapshot: (id: string) => void;
+  onClearSnapshots: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<LolTabId>('champions');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,9 +78,7 @@ export function LolWorkspace({
     // owned-collection tabs above — dividerBefore breaks it into its own
     // visual group rather than reading as one more collection tab.
     { id: 'loot', label: t('loot.title'), count: loot.data?.length, dividerBefore: true },
-    // No count: history isn't wired to real data yet, and 0 would misread
-    // as "checked, found nothing" rather than "not built yet".
-    { id: 'history', label: t('history.title'), dividerBefore: true },
+    { id: 'history', label: t('history.title'), count: snapshots.length, dividerBefore: true },
   ];
 
   return (
@@ -177,7 +187,13 @@ export function LolWorkspace({
             )}
 
             {activeTab === 'history' && (
-              <p className="text-neutral-400">{t('history.comingSoon')}</p>
+              <HistorySection
+                snapshots={snapshots}
+                activeSnapshotId={activeSnapshotId}
+                onView={onViewSnapshot}
+                onDelete={onDeleteSnapshot}
+                onClearAll={onClearSnapshots}
+              />
             )}
           </GridDensityProvider>
         </div>

@@ -1,6 +1,8 @@
 // League of Legends domain types, mapped from LCU payloads at the provider boundary.
 
 export interface AccountSummary {
+  /** The LCU's own numeric summoner ID — region-scoped, stable across name changes. Used to key snapshot history. */
+  accountId: number;
   summonerName: string;
   accountLevel: number;
   region: string;
@@ -183,4 +185,22 @@ export interface LootItem {
   disenchantValue?: LootCurrencyAmount;
   /** Absent when there's no direct unlock cost (e.g. already permanent, or not craftable). */
   unlockCost?: LootCurrencyAmount;
+}
+
+// Everything the LoL workspace has on screen at once — the `data` payload
+// for a history snapshot (see AccountSnapshot in shared/types/core.ts).
+// Saved verbatim as already-fetched, already-image-resolved domain objects
+// (imageDataUrl fields and all), so a saved snapshot renders fully offline
+// with zero re-fetching or re-resolution logic — see App.tsx.
+export interface LolAccountSnapshotData {
+  summary: AccountSummary;
+  ranked: RankedSummary;
+  wallet: Wallet;
+  champions: ChampionMasteryEntry[];
+  skins: OwnedSkin[];
+  chromas: SkinChromaGroup[];
+  wardSkins: OwnedWardSkin[];
+  emotes: OwnedEmote[];
+  profileIcons: OwnedProfileIcon[];
+  loot: LootItem[];
 }

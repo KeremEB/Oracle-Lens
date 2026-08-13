@@ -1,7 +1,7 @@
 // Shape of the contextBridge surface exposed to the renderer as `window.oracleLens`.
 // Defined once here so preload (implementation) and renderer (consumer) can't drift apart.
 
-import type { ConnectionStatus, Preferences } from './core';
+import type { AccountSnapshot, AccountSnapshotMeta, ConnectionStatus, GameId, Preferences } from './core';
 import type { SaveExportRequest, SaveExportResult } from './export';
 import type {
   AccountSummary,
@@ -21,6 +21,17 @@ export interface CoreBridge {
   getPreferences(): Promise<Preferences>;
   setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]): Promise<void>;
   saveExportFile(request: SaveExportRequest): Promise<SaveExportResult>;
+  listSnapshots(gameId?: GameId): Promise<AccountSnapshotMeta[]>;
+  getSnapshot(id: string): Promise<AccountSnapshot | null>;
+  saveSnapshot(input: {
+    gameId: GameId;
+    accountKey: string;
+    label: string;
+    subtitle: string;
+    data: unknown;
+  }): Promise<AccountSnapshotMeta>;
+  deleteSnapshot(id: string): Promise<void>;
+  clearSnapshots(gameId?: GameId): Promise<void>;
 }
 
 export interface LolBridge {
