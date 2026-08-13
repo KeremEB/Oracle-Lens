@@ -46,17 +46,17 @@ export function FiltersRow({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-6 py-3">
+    <div className="flex flex-nowrap items-center gap-4 overflow-x-auto border-b border-neutral-800 bg-neutral-900 px-6 py-3">
       <input
         type="text"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={t('search.placeholder')}
-        className="w-full max-w-xs rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500"
+        className="min-w-[96px] max-w-xs flex-1 rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500"
       />
 
       {activeTab === 'champions' && (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <label htmlFor="champions-level-filter" className="text-sm text-neutral-400">
             {t('champions.filterByLevel')}
           </label>
@@ -80,7 +80,7 @@ export function FiltersRow({
 
       {activeTab === 'skins' && (
         <>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <label htmlFor="skins-rarity" className="text-sm text-neutral-400">
               {t('skins.filterByRarity')}
             </label>
@@ -101,7 +101,7 @@ export function FiltersRow({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <label htmlFor="skins-legacy" className="text-sm text-neutral-400">
               {t('skins.filterByLegacy')}
             </label>
@@ -119,7 +119,7 @@ export function FiltersRow({
         </>
       )}
 
-      {exportPanel && <div className="ml-auto">{exportPanel}</div>}
+      {exportPanel && <div className="ml-auto shrink-0">{exportPanel}</div>}
     </div>
   );
 }

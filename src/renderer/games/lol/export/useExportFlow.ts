@@ -6,12 +6,13 @@ import { canvasToPngBytes } from './buildFile';
 import { buildPngZip } from './buildPngZip';
 import { buildTextReportPdf } from './buildTextReportPdf';
 import { buildExportFileName } from './fileName';
+import { prewarmCardImageCaches } from './prewarmImages';
 import { ALL_EXPORT_SECTIONS, EXPORTABLE_TABS, exportSectionFileToken, type ExportSectionId } from './exportSections';
 import type { ReportData } from './reportData';
 
 export type ExportStage =
   | { kind: 'idle' }
-  | { kind: 'preparing' }
+  | { kind: 'loadingImages'; done: number; total: number; label: string }
   | { kind: 'capturing'; done: number; total: number; label: string }
   | { kind: 'building' }
   | { kind: 'saving' }
@@ -65,11 +66,12 @@ export function useExportFlow(
 
     void (async () => {
       try {
-        setStage({ kind: 'preparing' });
+        await prewarmCardImageCaches(data.champions, data.skins);
         const sections = await captureReportSections(
           container,
           (done, total, label) => setStage({ kind: 'capturing', done, total, label }),
           ALL_EXPORT_SECTIONS,
+          (done, total, label) => setStage({ kind: 'loadingImages', done, total, label }),
         );
 
         setStage({ kind: 'building' });
@@ -94,11 +96,12 @@ export function useExportFlow(
 
     void (async () => {
       try {
-        setStage({ kind: 'preparing' });
+        await prewarmCardImageCaches(data.champions, data.skins);
         const sections = await captureReportSections(
           container,
           (done, total, label) => setStage({ kind: 'capturing', done, total, label }),
           [tabId],
+          (done, total, label) => setStage({ kind: 'loadingImages', done, total, label }),
         );
         if (sections.length === 0) return;
 

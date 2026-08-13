@@ -96,7 +96,7 @@ export function AccountHeader({
             profileIconId={summary.profileIconId}
             accountLevel={summary.accountLevel}
             summonerName={summary.summonerName}
-            size={42}
+            size={45}
           />
           <div>
             <div className="text-base font-semibold leading-tight">{summary.summonerName}</div>

@@ -1,14 +1,44 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { AccountSummary, RankedSummary } from '../../../../shared/types/lol';
 import type { LolTabId } from '../LolTabId';
 import { t } from '../../../core/i18n';
 import { useExportFlow } from './useExportFlow';
 import { ExportCaptureTree } from './ExportCaptureTree';
 import { EXPORTABLE_TABS, exportSectionLabel } from './exportSections';
+import { ArchiveIcon, DocumentTextIcon, ImageFileIcon } from './exportIcons';
 import type { ReportData } from './reportData';
 
-const actionButtonClass =
-  'rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50';
+// Icon always shown; the text label collapses at the `sm` breakpoint so the
+// three buttons plus the search box and any tab filters never force this row
+// to wrap — see FiltersRow.tsx, which is the thing that actually can't wrap.
+// `title` keeps the full description available as a tooltip regardless.
+function ExportButton({
+  icon,
+  label,
+  title,
+  disabled,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  title: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className="flex shrink-0 items-center gap-1.5 rounded border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-sm text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
 
 export function ExportPanel({
   summary,
@@ -36,31 +66,40 @@ export function ExportPanel({
   );
 
   const canExportActiveTab = (EXPORTABLE_TABS as readonly LolTabId[]).includes(activeTab);
+  const activeTabLabel = canExportActiveTab ? exportSectionLabel(activeTab) : '';
 
   return (
-    <div className="flex items-center gap-2">
-      <button type="button" disabled={isBusy} onClick={exportAllPng} className={actionButtonClass}>
-        {t('export.exportAllZip')}
-      </button>
+    <div className="flex min-w-0 shrink-0 items-center gap-2">
+      <ExportButton
+        icon={<ArchiveIcon size={15} />}
+        label={t('export.exportAllShort')}
+        title={t('export.exportAllZip')}
+        disabled={isBusy}
+        onClick={exportAllPng}
+      />
 
       {canExportActiveTab && (
-        <button
-          type="button"
+        <ExportButton
+          icon={<ImageFileIcon size={15} />}
+          label={activeTabLabel}
+          title={`${t('export.exportTab')} ${activeTabLabel}`}
           disabled={isBusy}
           onClick={() => exportTabPng(activeTab)}
-          className={actionButtonClass}
-        >
-          {t('export.exportTab')} {exportSectionLabel(activeTab)}
-        </button>
+        />
       )}
 
-      <button type="button" disabled={isBusy} onClick={exportTextPdf} className={actionButtonClass}>
-        {t('export.exportTextReport')}
-      </button>
+      <ExportButton
+        icon={<DocumentTextIcon size={15} />}
+        label={t('export.exportTextReportShort')}
+        title={t('export.exportTextReport')}
+        disabled={isBusy}
+        onClick={exportTextPdf}
+      />
 
       {stage.kind !== 'idle' && (
-        <p className="text-xs text-neutral-400">
-          {stage.kind === 'preparing' && t('export.preparing')}
+        <p className="min-w-0 max-w-[16rem] shrink truncate text-xs text-neutral-400">
+          {stage.kind === 'loadingImages' &&
+            `${t('export.loadingImages')} ${stage.label} (${stage.done}/${stage.total})`}
           {stage.kind === 'capturing' &&
             `${t('export.capturing')} ${stage.label} (${stage.done}/${stage.total})`}
           {stage.kind === 'building' && t('export.building')}

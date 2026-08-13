@@ -3,7 +3,7 @@
 // now, see HonorBadge in AccountHeader.tsx) — hand-drawn original shapes,
 // not Riot IP, not fetched from any CDN.
 
-function IconBase({
+export function IconBase({
   size,
   children,
 }: {
