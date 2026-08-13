@@ -139,17 +139,28 @@ export async function getChampionPortraitDataUrl(
   }
 }
 
-// Mastery crest badges, from Community Dragon (undocumented, but this exact
-// path was verified manually — see legendarychampionmastery/ directory).
-// Only levels 0 and 4-10 have distinct art; 1-3 fall back to the level-0
-// ("no crest yet") image since Riot doesn't ship separate crests for them.
+// Mastery crest badges — the client's own full-size emblem art, one per
+// level 1-10. The level -> file mapping is not guessed: it's lifted from the
+// client's own stylesheet, which does
+//   mastery-crest-image[data-mastery-level="N"] { content: url(mastery-N.png) }
+// for exactly N = 1..10.
+//
+// This replaces the older game/assets/ux/mastery/legendarychampionmastery/
+// set, which is both lower-resolution (256px vs 800x900) and incomplete —
+// it ships art only for levels 0 and 4-10, so 1-3 had to fall back to the
+// blank level-0 image.
+//
+// There is no mastery-0.png: level 0 means "owned but never played", which
+// has no mastery emblem at all, so that returns null rather than a
+// placeholder.
 const MASTERY_CREST_BASE =
-  'https://raw.communitydragon.org/latest/game/assets/ux/mastery/legendarychampionmastery';
+  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default';
 
 export async function getMasteryCrestDataUrl(level: number): Promise<string | null> {
-  const clamped = Math.min(Math.max(Math.round(level), 0), 10);
-  const crestLevel = clamped >= 4 ? clamped : 0;
-  const remoteUrl = `${MASTERY_CREST_BASE}/masterycrest_level${crestLevel}.png`;
+  const crestLevel = Math.min(Math.max(Math.round(level), 0), 10);
+  if (crestLevel < 1) return null;
+
+  const remoteUrl = `${MASTERY_CREST_BASE}/mastery-${crestLevel}.png`;
 
   try {
     return await getCachedAssetDataUrl(`lol/mastery-crest/${crestLevel}.png`, remoteUrl, 'image/png');

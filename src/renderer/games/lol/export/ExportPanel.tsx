@@ -52,7 +52,7 @@ export function ExportPanel({
     useReportExport(summary.summonerName);
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
+    <div className="flex flex-col items-start gap-1.5">
       <div className="flex items-center gap-3">
         <div className="flex rounded border border-neutral-700 bg-neutral-900 p-0.5">
           <button

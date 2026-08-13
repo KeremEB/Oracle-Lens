@@ -3,21 +3,13 @@ import type { ChampionMasteryEntry } from '../../../shared/types/lol';
 import { getMasteryCrestDataUrl } from './masteryCrestCache';
 
 // Fixed regardless of grid density, per the "never scale these" requirement.
-const CREST_SIZE = 56;
-// No separate banner/frame asset exists — checked Community Dragon's actual
-// directory listing for legendarychampionmastery/ (not a guess): it only
-// has masterycrest_level{N}.png and a smaller "_minis" variant per level,
-// nothing else. The ribbon is drawn with CSS instead, sized relative to the
-// crest so it reads as one badge rather than two unrelated pieces.
-const BANNER_WIDTH = CREST_SIZE * 1.3;
-const BANNER_HEIGHT = CREST_SIZE * 0.34;
-// Crest art fills only the center ~52% of its own canvas height (measured),
-// so the banner's vertical center sits just past that opaque region —
-// mostly peeking out below the crest rather than fully hidden under it.
-const BANNER_TOP = CREST_SIZE * 0.66;
-// Half the badge overflows below the portrait (straddling its bottom edge)
-// — reserve that space explicitly so it never overlaps the name.
-const BADGE_OVERFLOW = CREST_SIZE / 2 + 6;
+// The art is 800x900 (taller than wide), so width is derived from that ratio
+// rather than forcing a square and squashing it.
+const CREST_HEIGHT = 65;
+const CREST_WIDTH = Math.round(CREST_HEIGHT * (800 / 900));
+// Half the crest overflows below the portrait (straddling its bottom edge) —
+// reserve that space explicitly so it never overlaps the name.
+const CREST_OVERFLOW = CREST_HEIGHT / 2 - 6;
 
 export function ChampionCard({ champion }: { champion: ChampionMasteryEntry }) {
   const [crestUrl, setCrestUrl] = useState<string | null>(null);
@@ -47,57 +39,34 @@ export function ChampionCard({ champion }: { champion: ChampionMasteryEntry }) {
           </div>
         )}
 
-        {/* Crest + banner as one badge, straddling the portrait's bottom
-            edge (half over the art, half below it) — not a separate row. */}
-        <div
-          className="pointer-events-none absolute left-1/2 z-10"
-          style={{
-            bottom: -CREST_SIZE / 2,
-            width: CREST_SIZE,
-            height: CREST_SIZE,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          {/* Banner: behind the crest (z-0). */}
-          <div
-            className="absolute left-1/2 z-0 bg-neutral-800 ring-1 ring-neutral-600"
+        {/* Real per-level emblem art, straddling the portrait's bottom edge
+            (half over the art, half below it). No drawn banner shape behind
+            the number: the client's own mastery-banner-*.svg assets exist,
+            but nothing in its CSS or JS exposes which banner maps to which
+            level, and inventing that mapping would be a guess. */}
+        {crestUrl && (
+          <img
+            src={crestUrl}
+            alt={`Mastery ${champion.masteryLevel}`}
+            className="pointer-events-none absolute left-1/2 z-10 object-contain"
             style={{
-              top: BANNER_TOP,
-              width: BANNER_WIDTH,
-              height: BANNER_HEIGHT,
+              bottom: -CREST_HEIGHT / 2,
+              height: CREST_HEIGHT,
+              width: CREST_WIDTH,
               transform: 'translateX(-50%)',
-              clipPath: 'polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%)',
             }}
           />
-
-          {/* Crest: in front of the banner (z-10). */}
-          {crestUrl && (
-            <img
-              src={crestUrl}
-              alt={`Mastery ${champion.masteryLevel}`}
-              className="absolute inset-0 z-10"
-              style={{ height: CREST_SIZE, width: CREST_SIZE }}
-            />
-          )}
-
-          {/* Level number: always on top of both (z-20) — the crest's own
-              art can otherwise paint over the banner at this size. */}
-          <span
-            className="absolute left-1/2 z-20 text-[11px] font-bold leading-none text-neutral-100"
-            style={{
-              top: BANNER_TOP + BANNER_HEIGHT / 2,
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            {champion.masteryLevel}
-          </span>
-        </div>
+        )}
       </div>
 
-      <span className="w-full truncate text-xs" style={{ marginTop: BADGE_OVERFLOW }}>
+      <span
+        className="w-full truncate text-xs"
+        style={crestUrl ? { marginTop: CREST_OVERFLOW } : undefined}
+      >
         {champion.championName}
       </span>
       <span className="text-[11px] text-neutral-500">
+        {champion.masteryLevel > 0 ? `${champion.masteryLevel} · ` : ''}
         {champion.masteryPoints.toLocaleString('en-US')}
       </span>
     </div>

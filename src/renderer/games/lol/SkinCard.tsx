@@ -8,7 +8,7 @@ import { rarityLabel } from './rarity';
 const GEM_SIZE = 24;
 // Half the gem overflows below the tile (straddling its bottom edge) —
 // reserve that space explicitly so it never overlaps the name.
-const GEM_OVERFLOW = GEM_SIZE / 2 + 6;
+const GEM_OVERFLOW = GEM_SIZE / 2 - 2;
 
 export function SkinCard({ skin }: { skin: OwnedSkin }) {
   const [gemUrl, setGemUrl] = useState<string | null>(null);

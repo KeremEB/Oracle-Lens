@@ -4,7 +4,7 @@ import { t } from '../../core/i18n';
 import { ProfileIconBadge } from './ProfileIconBadge';
 import { RankBadge } from './RankBadge';
 import { MetaChip } from './MetaChip';
-import { HonorIcon, ServerIcon, SeasonIcon } from './metaIcons';
+import { HonorIcon, RefreshIcon, ServerIcon, SeasonIcon } from './metaIcons';
 import { useStaticIconUrl } from './useStaticIconUrl';
 import { countryFlagEmoji } from './countryFlag';
 
@@ -17,22 +17,29 @@ function CurrencyIcon({ url, alt }: { url: string | null; alt: string }) {
   return <img src={url} alt={alt} className="h-4 w-4 object-contain" />;
 }
 
-// Full-width, above the game rail and sidebar — see App.tsx — so the meta
-// row on the right always has real horizontal room instead of wrapping
-// under the sidebar's width. Three blocks: identity | both ranked queues |
-// account meta chips. Ranked and wallet arrive from separate fetches and
-// can lag behind the summary by a tick — each block simply doesn't render
-// until its own data is in. Meta fields the LCU didn't provide (country,
-// creation season) are omitted outright, never shown as an empty chip.
+// Full-width, above the game rail and sidebar — see App.tsx. Two rows, never
+// horizontal scroll or overflow:
+//  - top: identity | both ranked queues | meta chips, `flex-wrap` so the
+//    chips group (and, if the window is narrow enough, the chips
+//    themselves) drops to its own line instead of ever overflowing.
+//  - bottom: export controls, left-aligned under the profile icon.
+// Ranked and wallet arrive from separate fetches and can lag behind the
+// summary by a tick — each block simply doesn't render until its own data
+// is in. Meta fields the LCU didn't provide (country, creation season) are
+// omitted outright, never shown as an empty chip.
 export function AccountHeader({
   summary,
   ranked,
   wallet,
+  onRefresh,
+  isRefreshing,
   actions,
 }: {
   summary: AccountSummary;
   ranked: RankedSummary | null;
   wallet: Wallet | null;
+  onRefresh: () => void;
+  isRefreshing: boolean;
   actions?: ReactNode;
 }) {
   const rpIconUrl = useStaticIconUrl(() => window.oracleLens.lol.getRiotPointsIconUrl());
@@ -40,71 +47,89 @@ export function AccountHeader({
   const flag = summary.country ? countryFlagEmoji(summary.country) : null;
 
   return (
-    <header className="flex w-full shrink-0 flex-wrap items-center gap-x-8 gap-y-3 border-b border-neutral-800 bg-neutral-900 px-6 py-3">
-      <div className="flex items-center gap-3">
-        <ProfileIconBadge
-          profileIconId={summary.profileIconId}
-          accountLevel={summary.accountLevel}
-          summonerName={summary.summonerName}
-          size={48}
-        />
-        <div>
-          <div className="text-base font-semibold leading-tight">{summary.summonerName}</div>
-          <div className="text-sm text-neutral-400">
-            {t('accountSummary.accountLevel')} {summary.accountLevel}
+    <header className="flex w-full shrink-0 flex-col gap-2 border-b border-neutral-800 bg-neutral-900 px-6 py-2.5">
+      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex shrink-0 items-center gap-3">
+          {/* Small on purpose: the level border frame is ~2.7x the icon it
+              wraps (see ProfileIconBadge), so every px here costs ~2.7px of
+              header height. */}
+          <ProfileIconBadge
+            profileIconId={summary.profileIconId}
+            accountLevel={summary.accountLevel}
+            summonerName={summary.summonerName}
+            size={34}
+          />
+          <div>
+            <div className="text-base font-semibold leading-tight">{summary.summonerName}</div>
+            <div className="text-sm text-neutral-400">
+              {t('accountSummary.accountLevel')} {summary.accountLevel}
+            </div>
           </div>
         </div>
-      </div>
 
-      {ranked && (
-        <div className="flex items-center gap-8 border-l border-neutral-800 pl-8">
-          <RankBadge title={t('queue.soloDuo')} status={ranked.soloDuo} />
-          <RankBadge title={t('queue.flex')} status={ranked.flex} />
+        {ranked && (
+          <div className="flex shrink-0 items-center gap-4 border-l border-neutral-800 pl-4">
+            <RankBadge title={t('queue.soloDuo')} status={ranked.soloDuo} />
+            <RankBadge title={t('queue.flex')} status={ranked.flex} />
+          </div>
+        )}
+
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+          {wallet && (
+            <>
+              <MetaChip
+                icon={<CurrencyIcon url={rpIconUrl} alt="RP" />}
+                label={t('accountSummary.riotPoints')}
+                value={formatNumber(wallet.riotPoints)}
+              />
+              <MetaChip
+                icon={<CurrencyIcon url={beIconUrl} alt="BE" />}
+                label={t('accountSummary.blueEssence')}
+                value={formatNumber(wallet.blueEssence)}
+              />
+            </>
+          )}
+          <MetaChip
+            icon={<HonorIcon size={16} />}
+            label={t('accountSummary.honor')}
+            value={String(summary.honorLevel)}
+          />
+          <MetaChip
+            icon={<ServerIcon size={16} />}
+            label={t('accountSummary.server')}
+            value={summary.region}
+          />
+          {summary.country && (
+            <MetaChip
+              icon={<span className="text-base leading-none">{flag ?? '🏳️'}</span>}
+              label={t('accountSummary.country')}
+              value={summary.country}
+            />
+          )}
+          {summary.createdSeasonId != null && (
+            <MetaChip
+              icon={<SeasonIcon size={16} />}
+              label={t('accountSummary.season')}
+              value={String(summary.createdSeasonId)}
+            />
+          )}
         </div>
-      )}
 
-      <div className="ml-auto flex flex-wrap items-center gap-2">
-        {wallet && (
-          <>
-            <MetaChip
-              icon={<CurrencyIcon url={rpIconUrl} alt="RP" />}
-              label={t('accountSummary.riotPoints')}
-              value={formatNumber(wallet.riotPoints)}
-            />
-            <MetaChip
-              icon={<CurrencyIcon url={beIconUrl} alt="BE" />}
-              label={t('accountSummary.blueEssence')}
-              value={formatNumber(wallet.blueEssence)}
-            />
-          </>
-        )}
-        <MetaChip
-          icon={<HonorIcon size={16} />}
-          label={t('accountSummary.honor')}
-          value={String(summary.honorLevel)}
-        />
-        <MetaChip
-          icon={<ServerIcon size={16} />}
-          label={t('accountSummary.server')}
-          value={summary.region}
-        />
-        {summary.country && (
-          <MetaChip
-            icon={<span className="text-base leading-none">{flag ?? '🏳️'}</span>}
-            label={t('accountSummary.country')}
-            value={summary.country}
-          />
-        )}
-        {summary.createdSeasonId != null && (
-          <MetaChip
-            icon={<SeasonIcon size={16} />}
-            label={t('accountSummary.season')}
-            value={String(summary.createdSeasonId)}
-          />
-        )}
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          title={t('accountSummary.refresh')}
+          aria-label={t('accountSummary.refresh')}
+          className="flex shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800/70 p-1.5 text-neutral-300 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span className={isRefreshing ? 'animate-spin' : ''}>
+            <RefreshIcon size={14} />
+          </span>
+        </button>
       </div>
 
-      {actions}
+      {actions && <div className="flex items-center">{actions}</div>}
     </header>
   );
 }

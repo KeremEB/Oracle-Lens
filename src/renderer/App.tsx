@@ -27,23 +27,70 @@ export default function App() {
     };
   }, []);
 
-  const summary = useLolResource(connectionState, () => window.oracleLens.lol.getAccountSummary());
-  const ranked = useLolResource(connectionState, () => window.oracleLens.lol.getRankedSummary());
-  const wallet = useLolResource(connectionState, () => window.oracleLens.lol.getWallet());
-  const champions = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getChampionMasteries(),
+  // Bumped by the header's manual Refresh button — every useLolResource call
+  // below takes it as a dependency, so incrementing it re-runs all nine
+  // fetches without needing a connectionState change.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = (): void => setRefreshKey((key) => key + 1);
+
+  const summary = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getAccountSummary(),
+    refreshKey,
   );
-  const skins = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedSkins());
-  const chromas = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedChromas());
-  const wardSkins = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getOwnedWardSkins(),
+  const ranked = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getRankedSummary(),
+    refreshKey,
   );
-  const emotes = useLolResource(connectionState, () => window.oracleLens.lol.getOwnedEmotes());
-  const profileIcons = useLolResource(connectionState, () =>
-    window.oracleLens.lol.getOwnedProfileIcons(),
+  const wallet = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getWallet(),
+    refreshKey,
+  );
+  const champions = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getChampionMasteries(),
+    refreshKey,
+  );
+  const skins = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getOwnedSkins(),
+    refreshKey,
+  );
+  const chromas = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getOwnedChromas(),
+    refreshKey,
+  );
+  const wardSkins = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getOwnedWardSkins(),
+    refreshKey,
+  );
+  const emotes = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getOwnedEmotes(),
+    refreshKey,
+  );
+  const profileIcons = useLolResource(
+    connectionState,
+    () => window.oracleLens.lol.getOwnedProfileIcons(),
+    refreshKey,
   );
 
   const connected = connectionState === 'connected' && summary.data;
+  const isRefreshing = [
+    summary,
+    ranked,
+    wallet,
+    champions,
+    skins,
+    chromas,
+    wardSkins,
+    emotes,
+    profileIcons,
+  ].some((resource) => resource.loading);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-neutral-900 text-neutral-100">
@@ -57,6 +104,8 @@ export default function App() {
           summary={summary.data}
           ranked={ranked.data}
           wallet={wallet.data}
+          onRefresh={refresh}
+          isRefreshing={isRefreshing}
           actions={
             ranked.data &&
             champions.data &&

@@ -3,18 +3,18 @@ import type { RankedQueueStatus } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 
 // The source art (Community Dragon's ranked-emblem/emblem-{tier}.png) isn't
-// a tight icon — it's wide splash-style art (1280x720, one tier came back
-// 2560x1440) with the actual crest occupying only ~15-25% of the width and
-// ~16-33% of the height, roughly centered (measured across iron/gold/
-// diamond/master/challenger: horizontal center is ~50% on every tier,
-// vertical center clusters at ~47-49%). object-contain on the raw asset
-// renders a barely-visible speck at any reasonable chip size. Cropping via
-// a CSS background zoomed to the center ~36% of the image (280% background-
-// size) reliably contains even the largest tier's emblem across all of
-// them without per-tier tuning, since the crop is percentage-based and
-// therefore resolution-independent.
+// a tight icon — it's wide 16:9 splash art (1280x720; one tier ships at
+// 2560x1440) with the actual crest occupying only ~20% of the width and
+// ~29% of the height, centered (measured across iron/gold/diamond/master/
+// challenger: horizontal center ~50%, vertical ~47-49% on every tier).
+//
+// Cropped via a real <img> with object-fit: contain (so the browser itself
+// guarantees the aspect ratio, not a hand-computed one) sized to the full
+// box, then CSS-scaled up and clipped by an overflow:hidden parent. This is
+// the same zoom-into-center idea as a background-image crop, but object-fit
+// removes any doubt about whether the axes are scaling unevenly.
 const EMBLEM_SIZE = 80;
-const EMBLEM_ZOOM = '280% 280%';
+const EMBLEM_ZOOM = 5;
 
 function winRateColorClass(winRate: number): string {
   if (winRate > 50) return 'text-green-400';
@@ -47,18 +47,21 @@ function RankEmblem({ tier }: { tier: string }) {
   if (!emblemUrl) return <EmptyEmblem />;
   return (
     <div
-      role="img"
-      aria-label={tier}
-      className="shrink-0"
-      style={{
-        height: EMBLEM_SIZE,
-        width: EMBLEM_SIZE,
-        backgroundImage: `url(${emblemUrl})`,
-        backgroundSize: EMBLEM_ZOOM,
-        backgroundPosition: 'center 47%',
-        backgroundRepeat: 'no-repeat',
-      }}
-    />
+      className="relative shrink-0 overflow-hidden"
+      style={{ height: EMBLEM_SIZE, width: EMBLEM_SIZE }}
+    >
+      <img
+        src={emblemUrl}
+        alt={tier}
+        className="absolute left-1/2 top-1/2 object-contain"
+        style={{
+          height: EMBLEM_SIZE,
+          width: EMBLEM_SIZE,
+          objectPosition: '50% 46%',
+          transform: `translate(-50%, -35%) scale(${EMBLEM_ZOOM})`,
+        }}
+      />
+    </div>
   );
 }
 

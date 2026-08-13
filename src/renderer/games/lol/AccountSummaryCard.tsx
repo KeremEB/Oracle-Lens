@@ -13,13 +13,13 @@ export function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
       />
 
       <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-1 text-left">
-        <dt className="text-neutral-400">{t('accountSummary.summonerName')}</dt>
+        <dt className="text-neutral-500">{t('accountSummary.summonerName')}</dt>
         <dd>{summary.summonerName}</dd>
 
-        <dt className="text-neutral-400">{t('accountSummary.accountLevel')}</dt>
+        <dt className="text-neutral-500">{t('accountSummary.accountLevel')}</dt>
         <dd>{summary.accountLevel}</dd>
 
-        <dt className="text-neutral-400">{t('accountSummary.region')}</dt>
+        <dt className="text-neutral-400">{t('accountSummary.region')}</dt>S
         <dd>{summary.region}</dd>
 
         <dt className="text-neutral-400">{t('accountSummary.honorLevel')}</dt>

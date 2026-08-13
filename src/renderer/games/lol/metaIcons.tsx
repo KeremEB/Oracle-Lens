@@ -52,3 +52,12 @@ export function SeasonIcon({ size = 16 }: { size?: number }) {
     </IconBase>
   );
 }
+
+export function RefreshIcon({ size = 16 }: { size?: number }) {
+  return (
+    <IconBase size={size}>
+      <path d="M20 11a8 8 0 0 0-14.5-4.5M4 13a8 8 0 0 0 14.5 4.5" />
+      <path d="M4 4v5h5M20 20v-5h-5" />
+    </IconBase>
+  );
+}

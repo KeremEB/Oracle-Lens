@@ -12,6 +12,7 @@
   "accountSummary.honor": "Honor",
   "accountSummary.server": "Server",
   "accountSummary.country": "Country",
+  "accountSummary.refresh": "Refresh",
   "ranked.loading": "Loading ranked stats...",
   "queue.soloDuo": "Solo/Duo",
   "queue.flex": "Flex",
