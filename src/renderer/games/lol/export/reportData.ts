@@ -1,5 +1,6 @@
 import type {
   ChampionMasteryEntry,
+  LootItem,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
@@ -14,6 +15,7 @@ export interface CollectionCounts {
   wardSkins: number;
   emotes: number;
   profileIcons: number;
+  loot: number;
 }
 
 export interface ReportData {
@@ -23,6 +25,7 @@ export interface ReportData {
   wardSkins: OwnedWardSkin[];
   emotes: OwnedEmote[];
   profileIcons: OwnedProfileIcon[];
+  loot: LootItem[];
 }
 
 export function computeCollectionCounts(data: ReportData): CollectionCounts {
@@ -35,5 +38,6 @@ export function computeCollectionCounts(data: ReportData): CollectionCounts {
     wardSkins: data.wardSkins.length,
     emotes: data.emotes.length,
     profileIcons: data.profileIcons.length,
+    loot: data.loot.length,
   };
 }

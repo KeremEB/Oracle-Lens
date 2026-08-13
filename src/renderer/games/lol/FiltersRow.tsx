@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { ChampionMasteryEntry, SkinRarity } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 import { allRarities, rarityLabel } from './rarity';
@@ -24,6 +24,7 @@ export function FiltersRow({
   levelFilter,
   onLevelFilterChange,
   champions,
+  exportPanel,
 }: {
   activeTab: LolTabId;
   searchQuery: string;
@@ -36,6 +37,8 @@ export function FiltersRow({
   onLevelFilterChange: (value: number | 'all') => void;
   /** Only needed to populate the mastery-level dropdown's options. */
   champions: ChampionMasteryEntry[] | null;
+  /** Rendered right-aligned on this same row — absent until every collection has finished loading. */
+  exportPanel?: ReactNode;
 }) {
   const availableLevels = useMemo(
     () => [...new Set((champions ?? []).map((c) => c.masteryLevel))].sort((a, b) => b - a),
@@ -115,6 +118,8 @@ export function FiltersRow({
           </div>
         </>
       )}
+
+      {exportPanel && <div className="ml-auto">{exportPanel}</div>}
     </div>
   );
 }

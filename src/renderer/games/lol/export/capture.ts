@@ -75,23 +75,34 @@ export interface CapturedSection {
 }
 
 /**
- * Captures every top-level `[data-export-section]` child of `container` as
- * its own canvas, in document order — one canvas per report page, so a
- * multi-page export never cuts a card in half at a page boundary. Works for
- * the single-section summary card too (it carries one `data-export-section`
- * on its own root), so callers don't need a separate code path.
+ * Captures top-level `[data-export-section]` children of `container` as
+ * independent canvases, in document order — each is a wholly separate image
+ * (no stitching/stacking), so a multi-section export never cuts a card in
+ * half at a boundary.
+ *
+ * `sectionIds`, when given, captures only the matching sections instead of
+ * every section in the tree — the single-tab quick export uses this so it
+ * doesn't wait on the other seven hidden sections' artwork to finish
+ * loading. Omit it to capture everything (the "export all tabs" flow).
  */
 export async function captureReportSections(
   container: HTMLElement,
   onProgress?: (done: number, total: number, label: string) => void,
+  sectionIds?: readonly string[],
 ): Promise<CapturedSection[]> {
   await waitForFonts();
-  await waitForImagesToSettle(container);
 
-  const sectionEls = Array.from(container.querySelectorAll<HTMLElement>('[data-export-section]'));
+  const allSectionEls = Array.from(container.querySelectorAll<HTMLElement>('[data-export-section]'));
+  const sectionEls = sectionIds
+    ? allSectionEls.filter((el) => sectionIds.includes(el.dataset.exportSection ?? ''))
+    : allSectionEls;
+
   if (sectionEls.length === 0) {
     throw new Error('No exportable content found (missing data-export-section)');
   }
+
+  // Only wait on images inside the sections actually being captured.
+  await Promise.all(sectionEls.map(waitForImagesToSettle));
 
   const results: CapturedSection[] = [];
   for (let i = 0; i < sectionEls.length; i++) {

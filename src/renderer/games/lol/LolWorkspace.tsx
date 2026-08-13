@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import type {
+  AccountSummary,
   ChampionMasteryEntry,
   LootItem,
   OwnedEmote,
   OwnedProfileIcon,
   OwnedSkin,
   OwnedWardSkin,
+  RankedSummary,
   SkinChromaGroup,
   SkinRarity,
 } from '../../../shared/types/lol';
@@ -23,6 +25,8 @@ import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
 import { LootSection } from './LootSection';
 import { HistorySection } from './HistorySection';
+import { ExportPanel } from './export/ExportPanel';
+import type { ReportData } from './export/reportData';
 import type { LolTabId } from './LolTabId';
 
 // Individual chromas owned, not "skins that have any chroma" — matches
@@ -35,6 +39,8 @@ function countChromas(groups: SkinChromaGroup[] | null): number | undefined {
 // lives in App.tsx now so it can span the full window width above both the
 // rail and this sidebar — see App.tsx.
 export function LolWorkspace({
+  summary,
+  ranked,
   champions,
   skins,
   chromas,
@@ -48,6 +54,9 @@ export function LolWorkspace({
   onDeleteSnapshot,
   onClearSnapshots,
 }: {
+  summary: AccountSummary;
+  /** null while the ranked fetch is still in flight — export is unavailable until it resolves. */
+  ranked: RankedSummary | null;
   champions: LolResource<ChampionMasteryEntry[]>;
   skins: LolResource<OwnedSkin[]>;
   chromas: LolResource<SkinChromaGroup[]>;
@@ -81,6 +90,30 @@ export function LolWorkspace({
     { id: 'history', label: t('history.title'), count: snapshots.length, dividerBefore: true },
   ];
 
+  const exportData: ReportData | null =
+    champions.data &&
+    skins.data &&
+    chromas.data &&
+    wardSkins.data &&
+    emotes.data &&
+    profileIcons.data &&
+    loot.data
+      ? {
+          champions: champions.data,
+          skins: skins.data,
+          chromas: chromas.data,
+          wardSkins: wardSkins.data,
+          emotes: emotes.data,
+          profileIcons: profileIcons.data,
+          loot: loot.data,
+        }
+      : null;
+
+  const exportPanel =
+    exportData && ranked ? (
+      <ExportPanel summary={summary} ranked={ranked} data={exportData} activeTab={activeTab} />
+    ) : undefined;
+
   return (
     <div className="flex min-w-0 flex-1">
       <SidebarNav items={sidebarItems} activeId={activeTab} onSelect={(id) => setActiveTab(id as LolTabId)} />
@@ -97,6 +130,7 @@ export function LolWorkspace({
           levelFilter={levelFilter}
           onLevelFilterChange={setLevelFilter}
           champions={champions.data}
+          exportPanel={exportPanel}
         />
 
         <div className="min-h-0 flex-1 overflow-y-auto p-6">

@@ -16,10 +16,17 @@ function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * `OracleLens_[summoner]_[tabToken]_[date].[extension]` — `tabToken` is a
+ * filename-safe segment (see exportSections.ts's exportSectionFileToken),
+ * or a fixed literal like "All" / "Report" for exports that cover more than
+ * one tab.
+ */
 export function buildExportFileName(
   summonerName: string,
-  extension: 'png' | 'pdf',
-  date: Date = new Date(),
+  tabToken: string,
+  date: Date,
+  extension: 'png' | 'pdf' | 'zip',
 ): string {
-  return `OracleLens_${sanitizeForFileName(summonerName)}_${formatLocalDate(date)}.${extension}`;
+  return `OracleLens_${sanitizeForFileName(summonerName)}_${tabToken}_${formatLocalDate(date)}.${extension}`;
 }

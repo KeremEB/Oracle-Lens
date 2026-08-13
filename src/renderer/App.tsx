@@ -6,7 +6,6 @@ import { useLolResource, type LolResource } from './core/useLolResource';
 import { GameRail } from './core/GameRail';
 import { AccountHeader } from './games/lol/AccountHeader';
 import { LolWorkspace } from './games/lol/LolWorkspace';
-import { ExportPanel } from './games/lol/export/ExportPanel';
 
 function asResource<T>(data: T): LolResource<T> {
   return { data, error: null, loading: false };
@@ -275,36 +274,17 @@ export default function App() {
           wallet={active.wallet.data}
           onRefresh={refresh}
           isRefreshing={!isSnapshotMode && isRefreshing}
-          actions={
-            !isSnapshotMode &&
-            ranked.data &&
-            champions.data &&
-            skins.data &&
-            chromas.data &&
-            wardSkins.data &&
-            emotes.data &&
-            profileIcons.data ? (
-              <ExportPanel
-                summary={active.summary.data}
-                ranked={ranked.data}
-                champions={champions.data}
-                skins={skins.data}
-                chromas={chromas.data}
-                wardSkins={wardSkins.data}
-                emotes={emotes.data}
-                profileIcons={profileIcons.data}
-              />
-            ) : undefined
-          }
         />
       )}
 
       <div className="flex min-h-0 flex-1">
         <GameRail activeGame="lol" onSelect={() => {}} />
 
-        {showWorkspace ? (
+        {showWorkspace && active.summary.data ? (
           <LolWorkspace
             key={isSnapshotMode ? `snapshot-${viewingSnapshot?.id}` : 'live'}
+            summary={active.summary.data}
+            ranked={active.ranked.data}
             champions={active.champions}
             skins={active.skins}
             chromas={active.chromas}
