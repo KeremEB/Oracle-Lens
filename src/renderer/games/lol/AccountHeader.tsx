@@ -60,8 +60,9 @@ function HonorBadge({ level }: { level: number }) {
   );
 }
 
-// Full-width, above the game rail and sidebar — see App.tsx. One single row:
-// identity | both ranked queues | meta chips, then the Refresh button.
+// Full-width, above the game rail and sidebar — see App.tsx. At `lg`+, one
+// single row: identity | both ranked queues | meta chips, then the Refresh
+// button.
 //
 // Identity/ranked/chips live in their own `min-w-0 flex-1 overflow-x-auto`
 // sub-row: `flex-nowrap` so nothing drops to a second line, and `flex-1` so
@@ -69,9 +70,15 @@ function HonorBadge({ level }: { level: number }) {
 // scrolling horizontally within itself. Refresh sits outside that sub-row
 // as a plain shrink-0 sibling, so it's never part of the scrolling content
 // and always stays fully visible at the right edge, regardless of window
-// width or how many chips are showing — a narrow window scrolls the middle
-// group, it never pushes Refresh off-screen or wraps anything to a second
-// line.
+// width or how many chips are showing — a wide-but-tight window scrolls the
+// middle group, it never pushes Refresh off-screen or wraps anything to a
+// second line.
+//
+// Below `lg` there isn't room for chips to share a line with identity/ranked
+// without either scrolling sideways or crushing everything, so the chip
+// group becomes `w-full` — forcing it onto its own row beneath
+// identity/ranked/Refresh — and switches from `overflow-x-auto` to
+// `flex-wrap` so it wraps internally instead of scrolling.
 //
 // Ranked and wallet arrive from separate fetches and can lag behind the
 // summary by a tick — each block simply doesn't render until its own data
@@ -99,8 +106,8 @@ export function AccountHeader({
       className="w-full shrink-0 border-b px-6 py-2.5 transition-colors duration-300"
       style={{ borderColor: 'var(--game-accent-dark)', backgroundColor: 'var(--game-surface-card)' }}
     >
-      <div className="flex w-full flex-nowrap items-center gap-x-4">
-        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-x-4 overflow-x-auto">
+      <div className="flex w-full flex-wrap items-start gap-x-4 gap-y-2 lg:flex-nowrap lg:items-center">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 lg:flex-nowrap lg:overflow-x-auto">
           <div className="flex shrink-0 items-center gap-3">
             <ProfileIconBadge
               profileIconId={summary.profileIconId}
@@ -132,7 +139,7 @@ export function AccountHeader({
           )}
 
           <div
-            className="flex shrink-0 flex-nowrap items-center gap-3 self-stretch border-l pl-4"
+            className="flex w-full flex-wrap items-center gap-3 border-t pt-2 lg:w-auto lg:shrink-0 lg:flex-nowrap lg:self-stretch lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0"
             style={{ borderColor: 'var(--game-border-faint)' }}
           >
             {wallet && (

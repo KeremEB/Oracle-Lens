@@ -47,16 +47,23 @@ const SORT_OPTIONS: Partial<Record<LolTabId, { value: SortOrder; labelKey: 'sort
   ],
 };
 
-// One horizontal row above the content area: search (always present) plus
-// whichever filter controls the active tab actually has. Filter state lives
-// in the shell (LolWorkspace), not in the section components — this is the
-// single place those controls render, so search and a tab's filters always
-// end up on one line instead of stacked rows.
+// One row above the content area at `lg` and up: search (always present)
+// plus whichever filter controls the active tab actually has. Filter state
+// lives in the shell (LolWorkspace), not in the section components — this is
+// the single place those controls render.
 //
-// Search + the active tab's filters live in their own `min-w-0 flex-1
-// overflow-x-auto` sub-row so a narrow window scrolls just that group; the
-// export panel sits outside it as a shrink-0 sibling so it's never part of
-// the scrolling content and always stays fully visible at the right edge.
+// Below `lg` there isn't room for all of that on one line, so it splits into
+// two adjacent rows instead of squeezing or scrolling sideways: the search
+// box (`flex-[1_1_100%]` — full-width, which is also what forces the wrap)
+// on its own line, then filters/sort/export flowing and wrapping together on
+// the line below. The scroll hint text is desktop-only real estate (`lg:
+// inline`) — there's no room to explain a shortcut that doesn't fit.
+//
+// At `lg`+, search + the active tab's filters live in their own `min-w-0
+// flex-1 overflow-x-auto` sub-row so a narrow-but-still-wide window scrolls
+// just that group; the export panel sits outside it as a shrink-0 sibling so
+// it's never part of the scrolling content and always stays fully visible at
+// the right edge.
 export function FiltersRow({
   activeTab,
   searchQuery,
@@ -97,23 +104,28 @@ export function FiltersRow({
   const sortOptions = SORT_OPTIONS[activeTab];
 
   return (
-    <div className="flex flex-nowrap items-center gap-4 border-b border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] px-6 py-3">
-      <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-4 overflow-x-auto">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={t('search.placeholder')}
-          className="min-w-[96px] max-w-xs flex-1 rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-3 py-1.5 text-sm text-[var(--game-accent-soft)] outline-none placeholder:text-[var(--game-accent-muted)] focus:border-[var(--game-accent)]"
-        />
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] px-6 py-3 lg:flex-nowrap">
+      {/* `flex-[1_1_100%]` claims the entire row below `lg`, which is what
+          forces everything else onto a second line — at `lg`+ it switches to
+          a capped `flex-1` and shares the row like before. Either way it
+          never shrinks past `min-w`. */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder={t('search.placeholder')}
+        className="min-w-[96px] flex-[1_1_100%] rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-3 py-1.5 text-sm text-[var(--game-accent-soft)] outline-none placeholder:text-[var(--game-accent-muted)] focus:border-[var(--game-accent)] lg:max-w-xs lg:flex-1"
+      />
 
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 lg:flex-nowrap lg:overflow-x-auto">
         {activeTab === 'champions' && (
           <div className="flex shrink-0 items-center gap-2">
-            <label htmlFor="champions-level-filter" className={labelClass}>
+            <label htmlFor="champions-level-filter" className={`${labelClass} hidden lg:inline`}>
               {t('champions.filterByLevel')}
             </label>
             <select
               id="champions-level-filter"
+              aria-label={t('champions.filterByLevel')}
               className={selectClass}
               value={levelFilter}
               onChange={(e) =>
@@ -133,11 +145,12 @@ export function FiltersRow({
         {activeTab === 'skins' && (
           <>
             <div className="flex shrink-0 items-center gap-2">
-              <label htmlFor="skins-rarity" className={labelClass}>
+              <label htmlFor="skins-rarity" className={`${labelClass} hidden lg:inline`}>
                 {t('skins.filterByRarity')}
               </label>
               <select
                 id="skins-rarity"
+                aria-label={t('skins.filterByRarity')}
                 className={selectClass}
                 value={rarityFilter}
                 onChange={(e) =>
@@ -154,11 +167,12 @@ export function FiltersRow({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <label htmlFor="skins-legacy" className={labelClass}>
+              <label htmlFor="skins-legacy" className={`${labelClass} hidden lg:inline`}>
                 {t('skins.filterByLegacy')}
               </label>
               <select
                 id="skins-legacy"
+                aria-label={t('skins.filterByLegacy')}
                 className={selectClass}
                 value={legacyFilter}
                 onChange={(e) => onLegacyFilterChange(e.target.value as LegacyFilter)}
@@ -173,11 +187,12 @@ export function FiltersRow({
 
         {sortOptions && (
           <div className="flex shrink-0 items-center gap-2">
-            <label htmlFor="tab-sort-order" className={labelClass}>
+            <label htmlFor="tab-sort-order" className={`${labelClass} hidden lg:inline`}>
               {t('sort.label')}
             </label>
             <select
               id="tab-sort-order"
+              aria-label={t('sort.label')}
               className={selectClass}
               value={sortOrder}
               onChange={(e) => onSortOrderChange(e.target.value as SortOrder)}
@@ -199,7 +214,7 @@ export function FiltersRow({
         {t('filters.hint')}
       </span>
 
-      {exportPanel && <div className="ml-4 shrink-0">{exportPanel}</div>}
+      {exportPanel && <div className="shrink-0 lg:ml-4">{exportPanel}</div>}
     </div>
   );
 }
