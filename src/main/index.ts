@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, type MenuItemConstructorOptions } from 'electron';
 import path from 'node:path';
 import { ConnectionManager, ProviderRegistry } from './core/connection';
 import { getPreferences, setPreference } from './core/store/preferences';
@@ -89,6 +89,26 @@ lolProvider.onStatusChange((status) => {
     win.webContents.send(IPC_CHANNELS.lol.connectionStatusChanged, status);
   }
 });
+
+// Electron's default application menu binds CmdOrCtrl+R (and +Shift+R) to
+// Reload/Force Reload — a native accelerator that fires regardless of the
+// renderer's own keydown handling, and regardless of autoHideMenuBar (the
+// bar is hidden, but its accelerators still work). Ctrl+R is repurposed in
+// the renderer to refresh account data instead (see App.tsx), so the menu is
+// rebuilt here without any reload entry. Edit's standard shortcuts
+// (copy/paste/undo/redo/select-all) are kept via the built-in role, and dev
+// tools stay reachable in development.
+const menuTemplate: MenuItemConstructorOptions[] = [
+  { role: 'editMenu' },
+  {
+    label: 'View',
+    submenu: [
+      ...(isDev ? [{ role: 'toggleDevTools' } as MenuItemConstructorOptions] : []),
+      { role: 'togglefullscreen' },
+    ],
+  },
+];
+Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
 
 function createWindow(): void {
   const win = new BrowserWindow({

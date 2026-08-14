@@ -104,15 +104,21 @@ export function ExportCaptureTree({
         itemCount={data.champions.length}
         generatedAt={generatedAt}
       >
-        <ChampionsSection champions={data.champions} searchQuery="" levelFilter="all" />
+        <ChampionsSection champions={data.champions} searchQuery="" levelFilter="all" sortOrder="default" />
       </ExportSectionFrame>
 
       <ExportSectionFrame id="skins" summary={summary} itemCount={data.skins.length} generatedAt={generatedAt}>
-        <SkinsSection skins={data.skins} searchQuery="" rarityFilter="all" legacyFilter="all" />
+        <SkinsSection
+          skins={data.skins}
+          searchQuery=""
+          rarityFilter="all"
+          legacyFilter="all"
+          sortOrder="default"
+        />
       </ExportSectionFrame>
 
       <ExportSectionFrame id="chromas" summary={summary} itemCount={counts.chromas} generatedAt={generatedAt}>
-        <ChromasSection groups={data.chromas} searchQuery="" />
+        <ChromasSection groups={data.chromas} searchQuery="" sortOrder="az" />
       </ExportSectionFrame>
 
       <ExportSectionFrame
@@ -121,11 +127,11 @@ export function ExportCaptureTree({
         itemCount={data.wardSkins.length}
         generatedAt={generatedAt}
       >
-        <WardSkinsSection wards={data.wardSkins} searchQuery="" />
+        <WardSkinsSection wards={data.wardSkins} searchQuery="" sortOrder="az" />
       </ExportSectionFrame>
 
       <ExportSectionFrame id="emotes" summary={summary} itemCount={data.emotes.length} generatedAt={generatedAt}>
-        <EmotesSection emotes={data.emotes} searchQuery="" />
+        <EmotesSection emotes={data.emotes} searchQuery="" sortOrder="az" />
       </ExportSectionFrame>
 
       <ExportSectionFrame
@@ -134,11 +140,11 @@ export function ExportCaptureTree({
         itemCount={data.profileIcons.length}
         generatedAt={generatedAt}
       >
-        <ProfileIconsSection icons={data.profileIcons} searchQuery="" />
+        <ProfileIconsSection icons={data.profileIcons} searchQuery="" sortOrder="az" />
       </ExportSectionFrame>
 
       <ExportSectionFrame id="loot" summary={summary} itemCount={data.loot.length} generatedAt={generatedAt}>
-        <LootSection items={data.loot} searchQuery="" />
+        <LootSection items={data.loot} searchQuery="" sortOrder="az" />
       </ExportSectionFrame>
     </div>
   );

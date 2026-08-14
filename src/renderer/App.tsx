@@ -4,9 +4,14 @@ import type { LolAccountSnapshotData } from '../shared/types/lol';
 import { t } from './core/i18n';
 import { useLolResource, type LolResource } from './core/useLolResource';
 import { GameRail } from './core/GameRail';
-import { OracleLensLogo } from './core/OracleLensLogo';
+import { WaitingScreen } from './core/WaitingScreen';
 import { AccountHeader } from './games/lol/AccountHeader';
 import { LolWorkspace } from './games/lol/LolWorkspace';
+
+// How long the green "connected" flash holds on the waiting screen before
+// the app swaps over to the LoL theme and workspace — see the
+// connectionState effect below.
+const CONNECT_FLASH_MS = 500;
 
 function asResource<T>(data: T): LolResource<T> {
   return { data, error: null, loading: false };
@@ -42,9 +47,38 @@ export default function App() {
     };
   }, []);
 
-  // Bumped by the header's manual Refresh button — every useLolResource call
-  // below takes it as a dependency, so incrementing it re-runs all nine
-  // fetches without needing a connectionState change.
+  // Drives the brand-vs-LoL theme swap and the waiting screen's visibility.
+  // Lags `connectionState` by CONNECT_FLASH_MS on the unavailable->connected
+  // edge only, so the waiting screen gets to show its green confirmation
+  // flash before the app cuts over to the LoL theme and workspace.
+  const [displayConnected, setDisplayConnected] = useState(false);
+  const [connectFlash, setConnectFlash] = useState(false);
+  const wasConnectedRef = useRef(false);
+
+  useEffect(() => {
+    const isConnected = connectionState === 'connected';
+    const wasConnected = wasConnectedRef.current;
+    wasConnectedRef.current = isConnected;
+
+    if (isConnected && !wasConnected) {
+      setConnectFlash(true);
+      const timer = window.setTimeout(() => {
+        setConnectFlash(false);
+        setDisplayConnected(true);
+      }, CONNECT_FLASH_MS);
+      return () => window.clearTimeout(timer);
+    }
+
+    if (!isConnected) {
+      setConnectFlash(false);
+      setDisplayConnected(false);
+    }
+  }, [connectionState]);
+
+  // Bumped by the header's manual Refresh button (and the Ctrl+R shortcut
+  // below) — every useLolResource call below takes it as a dependency, so
+  // incrementing it re-runs all nine fetches without needing a
+  // connectionState change.
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = (): void => setRefreshKey((key) => key + 1);
 
@@ -225,7 +259,7 @@ export default function App() {
   };
   const active = snapshotResources ?? liveResources;
 
-  const connected = connectionState === 'connected' && summary.data;
+  const connected = displayConnected && summary.data;
   const showWorkspace = isSnapshotMode || connected;
   // Whole-app theme, chrome included: the LoL palette only while the client
   // itself is actually connected (regardless of whether account data has
@@ -233,8 +267,10 @@ export default function App() {
   // while browsing a saved snapshot after the client has closed. Both
   // `.theme-lol` and `.theme-brand` define the same `--game-*` custom
   // properties, so every component below just consumes `var(--game-*)`
-  // without needing to know which theme is actually active.
-  const isClientConnected = connectionState === 'connected';
+  // without needing to know which theme is actually active. Gated on
+  // `displayConnected` rather than `connectionState` directly so the waiting
+  // screen's green connect flash gets to play out first — see the effect above.
+  const isClientConnected = displayConnected;
   const isRefreshing = [
     summary,
     ranked,
@@ -247,6 +283,19 @@ export default function App() {
     profileIcons,
     loot,
   ].some((resource) => resource.loading);
+
+  // Ctrl+R refreshes account data instead of reloading the page. The default
+  // Electron/Chromium reload accelerator is removed app-wide in main/index.ts,
+  // so preventDefault here is just belt-and-suspenders.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (!event.ctrlKey || event.key.toLowerCase() !== 'r') return;
+      event.preventDefault();
+      if (!isRefreshing) refresh();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRefreshing]);
 
   return (
     <div
@@ -319,18 +368,11 @@ export default function App() {
           />
         ) : (
           <div className="flex flex-1 items-center justify-center">
-            {connectionState !== 'connected' && (
-              <div className="flex flex-col items-center gap-4">
-                <div style={{ color: 'var(--game-accent-dark)' }}>
-                  <OracleLensLogo size={72} />
-                </div>
-                <p style={{ color: 'var(--game-accent-muted)' }}>{t('accountSummary.waiting')}</p>
-              </div>
-            )}
-            {connectionState === 'connected' && summary.error && (
+            {!isClientConnected && <WaitingScreen connected={connectFlash} />}
+            {isClientConnected && summary.error && (
               <p style={{ color: 'var(--game-accent-2)' }}>{summary.error}</p>
             )}
-            {connectionState === 'connected' && !summary.error && !summary.data && (
+            {isClientConnected && !summary.error && !summary.data && (
               <p style={{ color: 'var(--game-accent-muted)' }}>{t('accountSummary.loading')}</p>
             )}
           </div>

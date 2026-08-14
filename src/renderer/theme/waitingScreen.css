@@ -1,0 +1,49 @@
+/* Disconnected-state welcome screen (see core/WaitingScreen.tsx). Deliberately
+   its own fixed palette rather than the `--game-*` brand tokens (theme/brand.css)
+   — this screen is styled straight from the app's own logo/icon colors and
+   isn't meant to double as the general "no client" chrome used elsewhere
+   (e.g. the history/snapshot offline banner). */
+
+@keyframes oracle-waiting-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes oracle-waiting-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes oracle-waiting-flash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.oracle-waiting-logo {
+  animation: oracle-waiting-pulse 2.6s ease-in-out infinite;
+}
+
+.oracle-waiting-ring {
+  animation: oracle-waiting-spin 5s linear infinite;
+}
+
+.oracle-waiting-flash {
+  animation: oracle-waiting-flash-in 260ms ease-out;
+}

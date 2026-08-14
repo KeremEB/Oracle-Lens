@@ -1,16 +1,19 @@
 import { useMemo } from 'react';
 import type { ChampionMasteryEntry } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
+import type { SortOrder } from '../../core/sortOrder';
 import { ChampionGrid } from './ChampionGrid';
 
 export function ChampionsSection({
   champions,
   searchQuery,
   levelFilter,
+  sortOrder,
 }: {
   champions: ChampionMasteryEntry[];
   searchQuery: string;
   levelFilter: number | 'all';
+  sortOrder: SortOrder;
 }) {
   const { standard, other } = useMemo(
     () => ({
@@ -27,6 +30,7 @@ export function ChampionsSection({
         champions={standard}
         searchQuery={searchQuery}
         levelFilter={levelFilter}
+        sortOrder={sortOrder}
       />
       {other.length > 0 && (
         <ChampionGrid
@@ -34,6 +38,7 @@ export function ChampionsSection({
           champions={other}
           searchQuery={searchQuery}
           levelFilter={levelFilter}
+          sortOrder={sortOrder}
         />
       )}
     </div>

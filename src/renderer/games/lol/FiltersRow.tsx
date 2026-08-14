@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import type { ChampionMasteryEntry, SkinRarity } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
+import type { SortOrder } from '../../core/sortOrder';
 import { allRarities, rarityLabel } from './rarity';
 import type { LegacyFilter } from './SkinsSection';
 import type { LolTabId } from './LolTabId';
@@ -9,6 +10,42 @@ const selectClass =
   'rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2 py-1 text-sm text-[var(--game-accent-soft)] outline-none focus:border-[var(--game-accent)]';
 
 const labelClass = 'text-sm text-[var(--game-accent-muted)]';
+
+// Which sort choices each tab offers, and their labels. Tabs with no
+// meaningful native order (everything but champions/skins) only ever offer
+// az/za — 'default' isn't a real option for them.
+const SORT_OPTIONS: Partial<Record<LolTabId, { value: SortOrder; labelKey: 'sort.masteryPoints' | 'sort.rarity' | 'sort.az' | 'sort.za' }[]>> = {
+  champions: [
+    { value: 'default', labelKey: 'sort.masteryPoints' },
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  skins: [
+    { value: 'default', labelKey: 'sort.rarity' },
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  chromas: [
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  wardSkins: [
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  emotes: [
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  profileIcons: [
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  loot: [
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+};
 
 // One horizontal row above the content area: search (always present) plus
 // whichever filter controls the active tab actually has. Filter state lives
@@ -31,6 +68,8 @@ export function FiltersRow({
   levelFilter,
   onLevelFilterChange,
   champions,
+  sortOrder,
+  onSortOrderChange,
   exportPanel,
 }: {
   activeTab: LolTabId;
@@ -44,6 +83,9 @@ export function FiltersRow({
   onLevelFilterChange: (value: number | 'all') => void;
   /** Only needed to populate the mastery-level dropdown's options. */
   champions: ChampionMasteryEntry[] | null;
+  /** The active tab's own remembered sort choice — absent (unused) on tabs with no sort control, e.g. History. */
+  sortOrder: SortOrder;
+  onSortOrderChange: (value: SortOrder) => void;
   /** Rendered right-aligned on this same row — absent until every collection has finished loading. */
   exportPanel?: ReactNode;
 }) {
@@ -51,6 +93,8 @@ export function FiltersRow({
     () => [...new Set((champions ?? []).map((c) => c.masteryLevel))].sort((a, b) => b - a),
     [champions],
   );
+
+  const sortOptions = SORT_OPTIONS[activeTab];
 
   return (
     <div className="flex flex-nowrap items-center gap-4 border-b border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] px-6 py-3">
@@ -126,7 +170,34 @@ export function FiltersRow({
             </div>
           </>
         )}
+
+        {sortOptions && (
+          <div className="flex shrink-0 items-center gap-2">
+            <label htmlFor="tab-sort-order" className={labelClass}>
+              {t('sort.label')}
+            </label>
+            <select
+              id="tab-sort-order"
+              className={selectClass}
+              value={sortOrder}
+              onChange={(e) => onSortOrderChange(e.target.value as SortOrder)}
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.labelKey)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      <span
+        className="hidden shrink-0 whitespace-nowrap text-xs opacity-60 lg:inline"
+        style={{ color: 'var(--game-accent-muted)' }}
+      >
+        {t('filters.hint')}
+      </span>
 
       {exportPanel && <div className="ml-4 shrink-0">{exportPanel}</div>}
     </div>

@@ -3,6 +3,7 @@ import type { ChampionMasteryEntry } from '../../../shared/types/lol';
 import { matchesSearch } from '../../core/searchMatch';
 import { useGridDensity } from '../../core/GridDensityContext';
 import { useCtrlScrollDensity } from '../../core/useCtrlScrollDensity';
+import { compareTr, type SortOrder } from '../../core/sortOrder';
 import { ChampionCard } from './ChampionCard';
 
 export function ChampionGrid({
@@ -10,11 +11,14 @@ export function ChampionGrid({
   champions,
   searchQuery,
   levelFilter,
+  sortOrder,
 }: {
   title: string;
   champions: ChampionMasteryEntry[];
   searchQuery: string;
   levelFilter: number | 'all';
+  /** 'default' = mastery points, highest first (the provider's native order). */
+  sortOrder: SortOrder;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const { minCardWidth, adjustDensity } = useGridDensity();
@@ -26,8 +30,12 @@ export function ChampionGrid({
         (levelFilter === 'all' || c.masteryLevel === levelFilter) &&
         matchesSearch(c.championName, searchQuery),
     );
-    return [...filtered].sort((a, b) => b.masteryPoints - a.masteryPoints);
-  }, [champions, levelFilter, searchQuery]);
+    return [...filtered].sort((a, b) => {
+      if (sortOrder === 'az') return compareTr(a.championName, b.championName);
+      if (sortOrder === 'za') return compareTr(b.championName, a.championName);
+      return b.masteryPoints - a.masteryPoints;
+    });
+  }, [champions, levelFilter, searchQuery, sortOrder]);
 
   return (
     <div className="w-full">
