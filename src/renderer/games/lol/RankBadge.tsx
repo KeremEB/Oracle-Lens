@@ -22,11 +22,19 @@ function winRateColorClass(winRate: number): string {
   return 'text-yellow-400';
 }
 
+// A pale ring rather than a solid fill — this is the normal, expected look
+// for an unranked or provisional queue, not a missing-data placeholder, so
+// it shouldn't read as visually "broken" the way a flat gray disc does.
 function EmptyEmblem() {
   return (
     <div
-      className="shrink-0 rounded-full bg-neutral-800"
-      style={{ height: EMBLEM_SIZE, width: EMBLEM_SIZE }}
+      className="shrink-0 rounded-full border-2"
+      style={{
+        height: EMBLEM_SIZE,
+        width: EMBLEM_SIZE,
+        borderColor: 'var(--game-accent-dark)',
+        backgroundColor: 'var(--game-surface-elevated)',
+      }}
     />
   );
 }
@@ -73,24 +81,34 @@ export function RankBadge({ title, status }: { title: string; status: RankedQueu
       {status.kind === 'ranked' ? <RankEmblem tier={status.tier} /> : <EmptyEmblem />}
 
       <div className="min-w-0">
-        <div className="text-[11px] uppercase tracking-wide text-neutral-500">{title}</div>
+        <div
+          className="text-[11px] uppercase tracking-wide"
+          style={{ color: 'var(--game-accent-muted)' }}
+        >
+          {title}
+        </div>
 
         {status.kind === 'unranked' && (
-          <div className="text-sm text-neutral-400">{t('ranked.unranked')}</div>
+          <div className="text-sm" style={{ color: 'var(--game-accent-muted)' }}>
+            {t('ranked.unranked')}
+          </div>
         )}
 
         {status.kind === 'provisional' && (
-          <div className="text-sm text-neutral-400">
+          <div className="text-sm" style={{ color: 'var(--game-accent-muted)' }}>
             {t('ranked.provisional')}: {status.gamesPlayed}
           </div>
         )}
 
         {status.kind === 'ranked' && (
           <>
-            <div className="truncate text-sm font-medium">
+            <div
+              className="truncate text-sm font-medium"
+              style={{ color: 'var(--game-accent-soft)' }}
+            >
               {status.tier} {status.division} · {status.leaguePoints} {t('ranked.leaguePoints')}
             </div>
-            <div className="text-xs text-neutral-400">
+            <div className="text-xs" style={{ color: 'var(--game-accent-muted)' }}>
               {status.wins}W {status.losses}L ·{' '}
               <span className={winRateColorClass(status.winRate)}>{status.winRate}%</span>
             </div>

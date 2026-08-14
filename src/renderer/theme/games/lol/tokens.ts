@@ -4,10 +4,10 @@
 // `.theme-lol` container is on screen) have a single source of truth
 // instead of a second copy of the hex values.
 export const lolTheme = {
-  accent: '#C8AA6E',
-  accentDark: '#785A28',
-  accentSoft: '#F0E6D2',
-  surface: '#0A1428',
-  surfaceCard: '#091428',
+  accent: '#B8A177',
+  accentDark: '#4A4128',
+  accentSoft: '#D9CCA8',
+  surface: '#0A0F1A',
+  surfaceCard: '#0B121E',
   fontDisplay: "'Cinzel', serif",
 } as const;

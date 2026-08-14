@@ -30,24 +30,34 @@ export function SidebarNav({
 }) {
   return (
     <nav
-      className="flex shrink flex-col gap-0.5 overflow-y-auto border-r border-neutral-800 bg-neutral-900 p-2"
-      style={{ width: SIDEBAR_WIDTH, minWidth: SIDEBAR_MIN_WIDTH }}
+      className="flex shrink flex-col gap-0.5 overflow-y-auto border-r p-2 transition-colors duration-300"
+      style={{
+        width: SIDEBAR_WIDTH,
+        minWidth: SIDEBAR_MIN_WIDTH,
+        borderColor: 'var(--game-accent-dark)',
+        backgroundColor: 'var(--game-surface-card)',
+      }}
     >
       {items.map((item) => (
         <Fragment key={item.id}>
-          {item.dividerBefore && <div className="my-1 border-t border-neutral-800" />}
+          {item.dividerBefore && (
+            <div className="my-1 border-t" style={{ borderColor: 'var(--game-accent-dark)' }} />
+          )}
           <button
             type="button"
             onClick={() => onSelect(item.id)}
-            className={
-              item.id === activeId
-                ? 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-100 bg-neutral-800'
-                : 'flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'
-            }
+            className="flex items-center justify-between rounded px-3 py-2 text-left text-sm font-medium transition-colors hover:opacity-90"
+            style={{
+              color: item.id === activeId ? 'var(--game-accent-soft)' : 'var(--game-accent-muted)',
+              backgroundColor: item.id === activeId ? 'var(--game-surface-elevated)' : 'transparent',
+            }}
           >
             <span className="truncate">{item.label}</span>
             {typeof item.count === 'number' && (
-              <span className="ml-2 shrink-0 rounded-full bg-neutral-700/70 px-1.5 py-0.5 text-[11px] tabular-nums text-neutral-300">
+              <span
+                className="ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[11px] tabular-nums"
+                style={{ backgroundColor: 'var(--game-surface-elevated)', color: 'var(--game-accent-soft)' }}
+              >
                 {item.count.toLocaleString('en-US')}
               </span>
             )}

@@ -1,0 +1,31 @@
+/* Oracle Lens brand chrome — applied to the whole app root (see App.tsx)
+   whenever no game client is connected: the "Waiting for Riot client..."
+   screen, a lost connection, or a history/snapshot view being browsed
+   offline. Defines the exact same custom property names as `.theme-lol`
+   (theme.css) so every component that consumes `var(--game-*)` renders
+   correctly under either theme without knowing which one is active.
+
+   rgb/hex only — oklch breaks html2canvas export, matching theme.css. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+.theme-brand {
+  --game-accent: #c08552; /* copper — headings, active/interactive text */
+  --game-accent-dark: #453224; /* pale muted copper — borders, low-contrast on purpose */
+  --game-accent-soft: #d9b78f; /* body text — lighter than the border tone */
+  --game-accent-muted: #6b5a48; /* dimmed copper — secondary text, placeholders */
+  --game-surface: #101115; /* deep neutral grey, near-black */
+  --game-surface-card: #16181d;
+  --game-surface-elevated: #1c1f26;
+  --game-accent-2: #b0413e; /* signal red — secondary accent, warnings */
+  --game-accent-2-dark: #5c2624;
+  --game-font-display: 'Inter', sans-serif;
+  --game-font-body: 'Inter', sans-serif;
+  --game-radius: 4px;
+  --game-glow: #3ed598; /* green — interaction only, never a static fill */
+
+  background-color: var(--game-surface);
+  color: var(--game-accent-soft);
+  font-family: var(--game-font-body);
+}

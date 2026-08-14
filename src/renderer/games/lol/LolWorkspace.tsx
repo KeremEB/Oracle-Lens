@@ -116,12 +116,13 @@ export function LolWorkspace({
 
   return (
     <div className="flex min-w-0 flex-1">
-      {/* Sidebar stays outside .theme-lol — it's brand chrome per CLAUDE.md,
-          not part of the per-game content area, so it keeps the neutral
-          palette regardless of which game is active. */}
+      {/* Theme (`--game-*` custom properties) comes from whichever class
+          wraps the app root in App.tsx, not from a class applied here — so
+          the sidebar and this content column always agree with the header
+          and game rail on which palette is active. */}
       <SidebarNav items={sidebarItems} activeId={activeTab} onSelect={(id) => setActiveTab(id as LolTabId)} />
 
-      <div className="theme-lol flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <FiltersRow
           activeTab={activeTab}
           searchQuery={searchQuery}

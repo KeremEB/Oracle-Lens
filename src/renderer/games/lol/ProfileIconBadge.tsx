@@ -66,8 +66,14 @@ export function ProfileIconBadge({
         />
       ) : (
         <div
-          className="flex items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500"
-          style={{ height: size, width: size, marginTop: -verticalNudge }}
+          className="flex items-center justify-center rounded-full text-xs"
+          style={{
+            height: size,
+            width: size,
+            marginTop: -verticalNudge,
+            backgroundColor: 'var(--game-surface-elevated)',
+            color: 'var(--game-accent-muted)',
+          }}
         >
           {summonerName.slice(0, 2).toUpperCase()}
         </div>

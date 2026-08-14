@@ -4,6 +4,7 @@ import type { LolAccountSnapshotData } from '../shared/types/lol';
 import { t } from './core/i18n';
 import { useLolResource, type LolResource } from './core/useLolResource';
 import { GameRail } from './core/GameRail';
+import { OracleLensLogo } from './core/OracleLensLogo';
 import { AccountHeader } from './games/lol/AccountHeader';
 import { LolWorkspace } from './games/lol/LolWorkspace';
 
@@ -226,6 +227,14 @@ export default function App() {
 
   const connected = connectionState === 'connected' && summary.data;
   const showWorkspace = isSnapshotMode || connected;
+  // Whole-app theme, chrome included: the LoL palette only while the client
+  // itself is actually connected (regardless of whether account data has
+  // finished loading yet), brand chrome the rest of the time — including
+  // while browsing a saved snapshot after the client has closed. Both
+  // `.theme-lol` and `.theme-brand` define the same `--game-*` custom
+  // properties, so every component below just consumes `var(--game-*)`
+  // without needing to know which theme is actually active.
+  const isClientConnected = connectionState === 'connected';
   const isRefreshing = [
     summary,
     ranked,
@@ -240,7 +249,9 @@ export default function App() {
   ].some((resource) => resource.loading);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-neutral-900 text-neutral-100">
+    <div
+      className={`${isClientConnected ? 'theme-lol' : 'theme-brand'} flex h-screen w-screen flex-col overflow-hidden transition-colors duration-300`}
+    >
       {/*
         Only shown while browsing a saved snapshot — offline, frozen data
         sourced entirely from disk rather than the live LCU connection (see
@@ -248,14 +259,22 @@ export default function App() {
         AccountHeader so it's visible no matter which tab is open.
       */}
       {isSnapshotMode && viewingSnapshot && (
-        <div className="flex shrink-0 items-center justify-between border-b border-neutral-800 bg-neutral-800/60 px-4 py-1.5 text-xs">
-          <span className="text-neutral-300">
+        <div
+          className="flex shrink-0 items-center justify-between border-b px-4 py-1.5 text-xs transition-colors duration-300"
+          style={{
+            borderColor: 'var(--game-accent-dark)',
+            backgroundColor: 'var(--game-surface-card)',
+            color: 'var(--game-accent-soft)',
+          }}
+        >
+          <span>
             {t('history.viewingBanner')} {formatSnapshotDate(viewingSnapshot.capturedAt)}
           </span>
           <button
             type="button"
             onClick={() => setViewingSnapshot(null)}
-            className="rounded px-2 py-1 font-medium text-neutral-200 hover:bg-neutral-700"
+            className="rounded px-2 py-1 font-medium hover:opacity-80"
+            style={{ color: 'var(--game-accent)' }}
           >
             {t('history.backToLive')}
           </button>
@@ -301,13 +320,18 @@ export default function App() {
         ) : (
           <div className="flex flex-1 items-center justify-center">
             {connectionState !== 'connected' && (
-              <p className="text-neutral-400">{t('accountSummary.waiting')}</p>
+              <div className="flex flex-col items-center gap-4">
+                <div style={{ color: 'var(--game-accent-dark)' }}>
+                  <OracleLensLogo size={72} />
+                </div>
+                <p style={{ color: 'var(--game-accent-muted)' }}>{t('accountSummary.waiting')}</p>
+              </div>
             )}
             {connectionState === 'connected' && summary.error && (
-              <p className="text-red-400">{summary.error}</p>
+              <p style={{ color: 'var(--game-accent-2)' }}>{summary.error}</p>
             )}
             {connectionState === 'connected' && !summary.error && !summary.data && (
-              <p className="text-neutral-400">{t('accountSummary.loading')}</p>
+              <p style={{ color: 'var(--game-accent-muted)' }}>{t('accountSummary.loading')}</p>
             )}
           </div>
         )}

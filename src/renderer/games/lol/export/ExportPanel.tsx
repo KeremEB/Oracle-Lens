@@ -32,7 +32,7 @@ function ExportButton({
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="flex shrink-0 items-center gap-1.5 rounded border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-sm text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex shrink-0 items-center gap-1.5 rounded border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2.5 py-1.5 text-sm text-[var(--game-accent-soft)] transition-colors hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_0_var(--game-glow)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
@@ -97,7 +97,10 @@ export function ExportPanel({
       />
 
       {stage.kind !== 'idle' && (
-        <p className="min-w-0 max-w-[16rem] shrink truncate text-xs text-neutral-400">
+        <p
+          className="min-w-0 max-w-[16rem] shrink truncate text-xs"
+          style={{ color: 'var(--game-accent-muted)' }}
+        >
           {stage.kind === 'loadingImages' &&
             `${t('export.loadingImages')} ${stage.label} (${stage.done}/${stage.total})`}
           {stage.kind === 'capturing' &&

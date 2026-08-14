@@ -13,13 +13,26 @@ export function MetaChip({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-full bg-neutral-800/70 px-2.5 py-1">
-      <span className="flex shrink-0 items-center justify-center text-neutral-400">{icon}</span>
+    <div
+      className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
+      style={{ backgroundColor: 'var(--game-surface-elevated)' }}
+    >
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{ color: 'var(--game-accent-muted)' }}
+      >
+        {icon}
+      </span>
       <div className="leading-tight">
-        <div className="text-[9px] font-semibold uppercase tracking-wide text-neutral-500">
+        <div
+          className="text-[9px] font-semibold uppercase tracking-wide"
+          style={{ color: 'var(--game-accent-muted)' }}
+        >
           {label}
         </div>
-        <div className="text-xs font-semibold tabular-nums text-neutral-100">{value}</div>
+        <div className="text-xs font-semibold tabular-nums" style={{ color: 'var(--game-accent-soft)' }}>
+          {value}
+        </div>
       </div>
     </div>
   );
