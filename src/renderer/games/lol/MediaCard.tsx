@@ -9,7 +9,7 @@ export function MediaCard({ name, imageDataUrl }: { name: string; imageDataUrl: 
           {name.slice(0, 2).toUpperCase()}
         </div>
       )}
-      <span className="max-w-[100px] truncate text-xs">{name}</span>
+      <span className="w-full truncate text-xs">{name}</span>
     </div>
   );
 }

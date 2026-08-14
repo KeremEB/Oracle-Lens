@@ -1,3 +1,4 @@
 @import "tailwindcss";
 @import "./theme/brand.css";
 @import "./theme/games/lol/theme.css";
+@import "./theme/scrollbar.css";

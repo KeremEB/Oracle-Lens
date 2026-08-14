@@ -40,12 +40,7 @@ export function SkinsSection({
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <div className="w-full">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">
-          {t('skins.title')}
-        </h2>
-        <SkinGrid skins={standard} />
-      </div>
+      <SkinGrid title={t('skins.title')} skins={standard} />
 
       {other.length > 0 && <SkinGrid title={t('skins.otherTitle')} skins={other} />}
     </div>

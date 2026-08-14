@@ -29,7 +29,7 @@ export function ChromaSwatch({ chroma }: { chroma: OwnedChroma }) {
         />
       </div>
 
-      <span className="max-w-[110px] truncate text-xs">{chroma.name}</span>
+      <span className="w-full truncate text-xs">{chroma.name}</span>
     </div>
   );
 }

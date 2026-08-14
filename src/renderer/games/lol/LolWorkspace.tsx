@@ -80,7 +80,7 @@ export function LolWorkspace({
     { id: 'champions', label: t('champions.title'), count: champions.data?.length },
     { id: 'skins', label: t('skins.title'), count: skins.data?.length },
     { id: 'chromas', label: t('chromas.title'), count: countChromas(chromas.data) },
-    { id: 'wardSkins', label: t('wardSkins.title'), count: wardSkins.data?.length },
+    { id: 'wardSkins', label: t('wardSkins.navTitle'), count: wardSkins.data?.length },
     { id: 'emotes', label: t('emotes.title'), count: emotes.data?.length },
     { id: 'profileIcons', label: t('profileIcons.title'), count: profileIcons.data?.length },
     // Loot is the player's unclaimed inventory, entirely separate from the

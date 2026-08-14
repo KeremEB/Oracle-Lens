@@ -106,7 +106,7 @@ export function AccountHeader({
               profileIconId={summary.profileIconId}
               accountLevel={summary.accountLevel}
               summonerName={summary.summonerName}
-              size={42}
+              size={54}
             />
             <div>
               <div
@@ -116,7 +116,7 @@ export function AccountHeader({
                 {summary.summonerName}
               </div>
               <div className="text-sm" style={{ color: 'var(--game-accent-muted)' }}>
-                {t('accountSummary.accountLevel')} {summary.accountLevel}
+                {t('accountSummary.levelShort')} {summary.accountLevel}
               </div>
             </div>
           </div>
