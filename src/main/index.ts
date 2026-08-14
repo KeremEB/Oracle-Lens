@@ -18,6 +18,13 @@ import type { SkinRarity } from '../shared/types/lol';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+if (!isDev) {
+  console.log = () => {};
+  console.debug = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+}
+
 const registry = new ProviderRegistry();
 const lolProvider = new LeagueOfLegendsProvider();
 registry.register(lolProvider);

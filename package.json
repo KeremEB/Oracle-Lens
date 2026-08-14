@@ -1,6 +1,6 @@
 {
   "name": "oracle-lens",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Local-only inventory and stats viewer for your own Riot Games accounts.",
   "main": "dist/main/index.js",
   "scripts": {
@@ -16,8 +16,8 @@
     "package": "npm run build && electron-builder"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "KeremEB",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",
@@ -44,5 +44,29 @@
     "typescript": "^7.0.2",
     "vite": "^8.2.1",
     "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "com.oraclelens.app",
+    "productName": "Oracle Lens",
+    "copyright": "Copyright © 2026 KeremEB",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/oraclelens.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }

@@ -20,11 +20,15 @@ Read these before writing any code. They override convenience.
    The only persisted data is display snapshots (see *Persistence*).
 3. **No account access for third parties.** There is no feature that reads another
    person's account. If a feature request implies it, stop and flag it.
-4. **Riot compliance.** This is an informational read-only tool. No automation of
+4. **No account valuation.** The app does not estimate what an account is worth, in
+   any currency or scoring scheme, and does not scrape or ingest account-marketplace
+   data. This feature was built and then deliberately removed. Do not reintroduce it
+   in any form, including as RP totals framed as market value.
+5. **Riot compliance.** This is an informational read-only tool. No automation of
    gameplay, no queue manipulation, no client actions beyond reading data.
-5. **No bundled Riot IP.** No game art, no licensed brand fonts committed to the repo.
+6. **No bundled Riot IP.** No game art, no licensed brand fonts committed to the repo.
    See *Assets* and *Typography*.
-6. **Never commit secrets or lockfile contents.** Lockfiles are read at runtime only.
+7. **Never commit secrets or lockfile contents.** Lockfiles are read at runtime only.
 
 ---
 
@@ -48,15 +52,14 @@ Decided. Do not substitute without being asked.
 
 ## Multi-game architecture
 
-This is the single most important structural decision in the project. Get it right
-before building features.
+This is the single most important structural decision in the project.
 
 **Principle:** a game-agnostic core, plus one self-contained module per game. Adding
 TFT or VALORANT should mean adding a folder, not editing the core.
 
 ### Connection reality per game
 
-The three games do **not** share a connection model. Know the difference:
+The three games do **not** share a connection model:
 
 - **League of Legends** — League Client (LCU) lockfile. Full inventory and ranked data.
 - **Teamfight Tactics** — served by the *same* League Client. Same connection, different
@@ -86,13 +89,14 @@ src/
   preload/
     index.ts          contextBridge surface
   renderer/
-    core/             app shell, navigation, game switcher, settings
+    core/             app shell, navigation, grid density, search matching, i18n
     games/
-      lol/            LoL-themed screens and components
+      lol/            LoL screens, cards, sections, export
+        export/       section capture, ZIP bundling, text PDF
       tft/            (later)
       valorant/       (later)
     theme/
-      brand.ts        Oracle Lens identity (constant across games)
+      brand.ts        Oracle Lens identity (waiting/disconnected states)
       games/          per-game theme tokens
     App.tsx
   shared/
@@ -105,14 +109,14 @@ locales/
 
 ### The GameProvider contract
 
-Every game implements the same interface, defined in `src/shared/types/core.ts`.
-Roughly: detect availability, connect, disconnect, subscribe to events, and expose a
-set of capability-flagged data fetchers.
+Every game implements the same interface, defined in `src/shared/types/core.ts`:
+detect availability, connect, disconnect, subscribe to events, and expose a set of
+capability-flagged data fetchers.
 
 Games have genuinely different data. Do **not** force a lowest-common-denominator
-shape. Instead, each provider declares which capabilities it supports (ranked,
-champions, skins, chromas, collectibles, value score, …) and the UI renders only
-what is declared. A missing capability is a normal state, not an error.
+shape. Each provider declares which capabilities it supports (ranked, champions,
+skins, chromas, collectibles, loot, …) and the UI renders only what is declared.
+A missing capability is a normal state, not an error.
 
 ---
 
@@ -122,12 +126,15 @@ The user must never press a "Connect" button under normal conditions.
 
 - On launch, poll for available client lockfiles across all registered providers.
 - Connect automatically to whatever is found.
-- If nothing is found, show a passive waiting state (`Waiting for Riot client…`).
+- If nothing is found, show the branded waiting screen (see *Theming*).
 - If a client closes mid-session, return to the waiting state without crashing and
-  without discarding already-loaded data.
-- If a client reopens, reconnect automatically.
+  without discarding already-loaded data. `ECONNREFUSED` on a stale port must
+  demote the connection rather than surface a raw error.
+- If a client reopens, read the *new* lockfile and reconnect automatically.
 - Connection state is per-provider and typed:
   `unavailable | connecting | connected | error`.
+- A manual **Refresh** control (button, and `Ctrl+R`) re-fetches all data for the
+  connected account.
 - If more than one game's client is running, both are available and the user switches
   between them freely. Never force a choice on launch.
 
@@ -135,125 +142,209 @@ The user must never press a "Connect" button under normal conditions.
 
 ## Theming
 
-Two layers, and they must not bleed into each other.
+Two themes, switched by connection state — not by screen region.
 
-### 1. Brand chrome — constant
+### 1. Brand theme — disconnected only
 
-The application shell (title bar, sidebar, settings, game switcher, connection
-indicator) always wears the Oracle Lens identity, regardless of the active game.
-This is what keeps the app from feeling like three unrelated apps stapled together.
+Used **only** when no client is connected: the waiting screen, the disconnected
+state, and History opened without a live client. Drawn from the app logo.
 
-- **Surface** — deep neutral grey backgrounds and panels.
-- **Copper** — primary accent from the logo. Borders, headings, active states.
-- **Signal red** — secondary accent from the logo. Highlights and warnings.
-- **Green glow** — interaction only. A soft luminous halo behind buttons on hover, and
-  behind the connect affordance when a connection goes live. Green is never a static
-  fill; it always means "something is live".
+- **Surface** — `#141010` base, `#1E1818` panel, `#2A2222` raised.
+- **Copper** — `#6B3A1F` dark, `#A66A3A` mid, `#D9A05B` bright. Borders, headings.
+- **Signal red** — `#8B1A1A` dark, `#C1272D` mid, `#E63946` bright. Status text.
+- **Green glow** — `#3E8E5A`. Interaction and "connection is live" only. Green is
+  never a static fill.
 
-Exact hex values are locked in `theme/brand.ts` once the logo is finalised.
+The waiting screen shows the logo, the app name, and a soft pulsing animation while
+scanning for a client. On connect it flashes green, then transitions to the game theme.
 
-### 2. Game theme — swaps with the active game
+### 2. Game theme — connected
 
-Once the user enters a game's account view, that game's content area adopts that
-game's visual language: palette, typography scale, border and panel treatment,
-texture, motion feel.
+Once a client connects, the **entire** interface adopts that game's visual language —
+sidebar, header, and game rail included, not just the content area. This was a
+deliberate change from the original "constant brand chrome" plan.
 
-- **League of Legends** — gold and deep blue, ornamental borders, serif display
-  headings, a heavier and more ceremonial feel.
-- **Teamfight Tactics** — softer and more playful; lighter surfaces, rounded forms.
-- **VALORANT** — high-contrast, angular, sharp corners, tight condensed type,
-  minimal ornament.
+**League of Legends** (`theme/games/lol/`):
 
-Each game theme is a token set under `theme/games/`, applied by swapping CSS custom
-properties on the content container. **Never fork components per game for styling
-reasons** — one component, tokens decide how it looks. Forking is allowed only when
-the underlying data genuinely differs.
+- **Gold** — muted and warm, not saturated. Around `#B8A177`; text gold slightly
+  lighter than border gold, which stays faint.
+- **Navy** — very dark, low blue. Around `#0A0F1A` for surfaces.
+- **Hextech** — `#0AC8B9` for accents.
+- Thin gold borders, near-square corners, generous spacing, ceremonial feel.
+- Champion and skin art is already colourful: the theme handles borders and
+  surfaces, the card interior belongs to the artwork.
 
-Both light and dark modes ship for every theme; dark is the default and the choice
-persists.
+TFT and VALORANT token sets are stubs until those providers land.
 
-Rarity colours are separate from all of the above and follow each game's own rarity
-system. Keep them per-game in `theme/games/<game>/rarity.ts`.
+Each game theme is a token set applied by swapping CSS custom properties.
+**Never fork components per game for styling reasons** — one component, tokens decide
+how it looks. Forking is allowed only when the underlying data genuinely differs.
+
+Rarity colours are separate and follow each game's own rarity system. Keep them
+per-game in `theme/games/<game>/rarity.ts`.
+
+### Colour format constraint
+
+**Never define theme colours in `oklch`.** `html2canvas` cannot parse it and every
+export fails with an unsupported-colour-function error. Use hex or `rgb()`.
+
+### Scrollbars and motion
+
+- Scrollbars are themed to the active palette: faint track, muted gold thumb,
+  ~8–10px, no arrow buttons.
+- Glow effects appear **on hover** (~150ms). The active sidebar tab carries a much
+  fainter constant glow to signal position.
+- Tab changes cross-fade (150–200ms, opacity only) and reset scroll to top.
 
 ---
 
 ## Typography
 
 Riot's brand fonts (Beaufort, Spiegel, Tungsten, DIN Next) are **commercially licensed
-and must not be committed or bundled.** Use visually sympathetic open alternatives
-loaded via `@fontsource`:
+and must not be committed or bundled.** Open alternatives via `@fontsource`:
 
-- LoL display headings — an ornamental serif (Cinzel or Marcellus).
-- TFT — a rounded, friendly sans.
-- VALORANT — a condensed geometric sans.
-- Shared body text and numerals — Inter, for legibility in dense stat tables.
+- **Cinzel** — display headings, section titles (stands in for Beaufort).
+- **Inter** — body text and numerals.
+- TFT and VALORANT will pick their own stand-ins when those themes land.
 
-Declare fonts as theme tokens, never hardcoded in components. If a font choice looks
-wrong next to the real game, change the *alternative* — do not reach for the licensed
-original.
+Declare fonts as theme tokens, never hardcoded in components. If a font looks wrong
+next to the real game, change the *alternative* — do not reach for the licensed original.
 
 ---
 
 ## Assets
 
 **Do not commit game art to the repository.** Champion, skin, chroma, ward, emote,
-profile icon, mastery crest, and rank emblem art is fetched at runtime from Riot's
-public CDNs (Data Dragon / Community Dragon) and cached locally.
-
-Reasons: the repo stays small, content stays current as Riot ships patches, and we
-avoid redistributing Riot's assets.
+profile icon, mastery crest, mastery banner, and rank emblem art is fetched at runtime
+from Riot's public CDNs (Data Dragon / Community Dragon) and cached locally.
 
 Build URLs from IDs via helpers in `src/main/core/cdn/`, namespaced per game. Never
 hardcode a full asset URL in a component. Always handle the missing-asset case with a
 placeholder — the CDNs have gaps, especially for very new or very old content.
 
-The only art committed to the repo is the **application's own logo/icon** (window
-icon, installer icon), in `build/`.
+**Never invent an asset mapping.** If the correct art or the level→asset mapping
+cannot be located, say so and fall back to a plain treatment. Drawing an approximation
+in CSS and passing it off as the real badge is not acceptable. The mastery banner
+tier mapping was recovered from the client's own bundle for exactly this reason.
+
+The only art committed to the repo is the **application's own logo/icon**
+(`build/oraclelens.png`), used for the window icon, the installer icon, and the
+waiting screen.
 
 ---
 
-## Roadmap
+## Features
 
-Build in this order. Do not scaffold future games early — build the seams, not the
-implementations.
+### Shipped (v1 — League of Legends)
 
-### v1 — League of Legends
-
-1. **Core connection layer** — provider registry, auto-detect, reconnect, state
-   machine. No UI polish.
-2. **App shell** — brand chrome, navigation, game switcher (with only LoL present).
-3. **Account summary** — level, region, honor level + checkpoint, profile icon.
-4. **Ranked** — Solo/Duo and Flex: tier, division, LP, wins/losses, win rate.
-5. **Champions** — owned champions with mastery level (1–10) crest badges, filterable
-   by mastery level.
+1. **Connection layer** — provider registry, auto-detect, reconnect, typed state
+   machine, manual refresh.
+2. **App shell** — game rail (left, 60px), sidebar, full-width header.
+3. **Account summary** — level, region, country, honor level, profile icon with
+   level banner, RP and Blue Essence balances, shown as labelled chips.
+4. **Ranked** — Solo/Duo and Flex: emblem, tier, division, LP, W/L, win rate.
+   Win rate colour: yellow at exactly 50%, green above, red below — the colour must
+   agree with the rounded figure that is displayed.
+5. **Champions** — owned champions (sourced from *ownership*, not mastery, so
+   unplayed champions appear) with mastery level 1–10 crest + banner badges,
+   filterable by mastery level. Special-mode entries are split into a `CLASSIC`
+   section.
 6. **Skins** — owned skins with rarity gem icons (Epic / Legendary / Ultimate /
    Hextech / Transcendent / Exalted), filterable by rarity and legacy status.
-7. **Chromas** — grouped under their skin, rendered with their actual colour palette.
+   Base skins excluded. Special-mode entries split into `CLASSIC`.
+7. **Chromas** — with their actual colour palettes.
 8. **Collectibles** — ward skins, emotes, profile icons.
-9. **Search** — across champions, skins, and collectibles.
-10. **Export** — render the report to PNG and PDF.
-11. **History** — recently viewed snapshots.
+9. **Loot** — shards, chests, keys, orbs, gemstones, Mythic Essence, with disenchant
+   and unlock values. Kept strictly separate from owned-item counts.
+10. **Search** — per-tab, diacritic- and case-insensitive, Turkish-aware.
+11. **Sorting** — per-tab: mastery points or rarity by default, plus A–Z / Z–A using
+    `localeCompare('tr')`.
+12. **Grid density** — `Ctrl+Scroll` resizes cards on every grid tab. Mastery crests
+    and rarity gems scale with the card. Fixed step levels, persisted.
+13. **Export** — see below.
+14. **History** — local snapshots, viewable without a live client.
 
-### v2 — Teamfight Tactics
+### Removed
 
-Reuses the LoL client connection. TFT ranked, Little Legends, Tacticians, Arenas,
-Boons, TFT theme.
+**Account value scoring.** Built, then removed at the user's request along with all
+pricing data and RP package tables. See non-negotiable rule 4.
 
-### v3 — VALORANT
+### Later
 
-Separate Riot Client provider. Ranked, agents, skins and variants, buddies, sprays,
-player cards, titles, VALORANT theme.
+- **v2 — Teamfight Tactics.** Reuses the LoL client connection. TFT ranked, Little
+  Legends, Tacticians, Arenas, Boons, TFT theme.
+- **v3 — VALORANT.** Separate Riot Client provider. Ranked, agents, skins and
+  variants, buddies, sprays, player cards, titles, VALORANT theme.
+
+---
+
+## Export
+
+Three modes:
+
+1. **All sections (ZIP)** — one PNG per section (Account Details, Champions, Skins,
+   Chromas, Wards, Emotes, Profile Icons, Loot), bundled into a single ZIP. Never a
+   single stacked image.
+2. **Current section (PNG)** — quick export of the active tab.
+3. **Text report (PDF)** — no images. Account summary, ranked, and per-category text
+   listings. Searchable, small, page-numbered.
+
+PNG rules:
+
+- Cards spread **horizontally**; grow width rather than producing a very tall image.
+- Cards must stay legible — extend the canvas rather than shrinking cards.
+- 2× scale for sharpness.
+- Header band on each image: summoner, server, section name, item count, date.
+- Split very large sections into numbered parts.
+
+Filename: `OracleLens_[summoner]_[section]_[date]`.
+
+### The blank-export trap
+
+`html2canvas` has a **100-entry default image cache**. Any section with more than 100
+distinct image sources rendered blank cards — the failure that cost the most time in
+this project. Before touching capture code, understand the fix in
+`renderer/games/lol/export/capture.ts`. Also verify every image with `complete` **and**
+`naturalWidth`; `onload` alone does not fire for cached images.
+
+---
+
+## Layout
+
+- **Game rail** — far left, 60px, one icon per game. Icons carry their own game's
+  colours (LoL: gold on navy) rather than the brand palette; active is bright, inactive
+  is dim. This is the one place where per-game colour appears outside the content area.
+- **Sidebar** — tabs with right-aligned count badges, grouped by faint dividers:
+  collection tabs, then Loot, then History.
+- **Header** — full width, above the rail and sidebar. Left: profile icon + level
+  banner + name + level. Middle: ranked blocks. Right: chips and controls. Vertical
+  dividers separate the three groups.
+- **Content** — filter row (search, filters, sort, export) above the grid. Grids use
+  `auto-fill` / `minmax` driven by the grid-density value.
+
+**Responsive:** nothing may overflow horizontally. On narrow windows the filter row
+splits into two rows — search on top, controls below — and the keyboard-hint text
+hides. Header chips wrap rather than scroll or clip.
+
+---
+
+## Keyboard
+
+- `Ctrl+Scroll` — resize grid cards.
+- `Ctrl+R` — refresh data. Must call `preventDefault()`; it must never trigger an
+  Electron page reload.
 
 ---
 
 ## Persistence
 
-Stored locally in the Electron `userData` directory:
+Stored in the Electron `userData` directory:
 
 - Cached CDN metadata per game, with a version stamp.
-- Snapshots of previously viewed accounts: account ID plus displayed data only,
-  tagged by game.
-- User preferences: theme mode, last active game, filters.
+- Account snapshots: account ID plus displayed data only, tagged by game and dated.
+  Re-viewing an account adds a new snapshot rather than overwriting. Oldest entries
+  are pruned past a cap.
+- Preferences: grid density, sort order, last active game.
 
 **Never stored:** credentials, tokens, lockfile contents, session cookies.
 
@@ -264,13 +355,15 @@ Stored locally in the Electron `userData` directory:
 - TypeScript `strict: true`. No `any` in committed code.
 - Domain types live in `src/shared/types/` and are shared across processes.
 - Client responses are validated and mapped into domain types at the provider
-  boundary. Raw client payloads never travel past `src/main/games/<game>/mappers/`.
+  boundary. Raw payloads never travel past `src/main/games/<game>/mappers/`.
 - All user-facing strings go through `locales/en.json`. No hardcoded copy in JSX.
+- No raw hex in components — theme tokens only. No `oklch` anywhere.
 - Nothing game-specific in `core/`. If a core file needs a game name in a
   conditional, the abstraction is wrong — stop and fix the seam.
 - Prefer small, focused components. Past ~150 lines, split.
 - Network and filesystem failures are expected, not exceptional. Handle them with
   visible UI states rather than swallowed errors.
+- Delete diagnostic harnesses once the bug they chased is fixed.
 
 ---
 
@@ -281,7 +374,6 @@ npm install       # install dependencies
 npm run dev       # start in development mode
 npm run build     # type-check and build
 npm run package   # produce a distributable installer
-npm run lint      # lint and format check
 ```
 
 ---
@@ -289,8 +381,13 @@ npm run lint      # lint and format check
 ## Working style for Claude Code
 
 - Work one feature at a time. Ask before expanding scope.
+- **Do not commit.** The user commits manually after testing.
+- When a prompt has numbered items, do all of them, then list what was done and what
+  was skipped and why. Partial silent completion has been a recurring problem.
 - Before adding a dependency, say what it's for and whether a small local
   implementation would do instead.
 - When a local API endpoint's shape is uncertain, say so rather than guessing. Many
   LCU and Riot Client endpoints are undocumented and change between patches.
+- When a bug survives two attempted fixes, stop guessing and produce diagnostics
+  first.
 - Flag anything that would conflict with the non-negotiable rules above.
