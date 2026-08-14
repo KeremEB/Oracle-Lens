@@ -24,6 +24,8 @@
   --game-font-body: 'Inter', sans-serif;
   --game-radius: 4px;
   --game-glow: #3ed598; /* green — interaction only, never a static fill */
+  --game-surface-sunken: #1a1d23; /* a touch darker than surface-elevated — header meta chips */
+  --game-border-faint: #45322466; /* low-alpha accent-dark — soft dividers, not structural borders */
 
   background-color: var(--game-surface);
   color: var(--game-accent-soft);

@@ -9,15 +9,15 @@ import { useStaticIconUrl } from './useStaticIconUrl';
 import { countryFlagEmoji } from './countryFlag';
 import { getHonorBadgeDataUrl } from './honorBadgeCache';
 
-const HONOR_BADGE_SIZE = 18;
+const HONOR_BADGE_SIZE = 20;
 
 function formatNumber(value: number): string {
   return value.toLocaleString('en-US');
 }
 
 function CurrencyIcon({ url, alt }: { url: string | null; alt: string }) {
-  if (!url) return <span className="h-4 w-4" />;
-  return <img src={url} alt={alt} className="h-4 w-4 object-contain" />;
+  if (!url) return <span className="h-5 w-5" />;
+  return <img src={url} alt={alt} className="h-5 w-5 object-contain" />;
 }
 
 // The client's own honor badge art (badge-honor-1.svg .. badge-honor-5.svg,
@@ -123,15 +123,18 @@ export function AccountHeader({
 
           {ranked && (
             <div
-              className="flex shrink-0 items-center gap-4 border-l pl-4"
-              style={{ borderColor: 'var(--game-accent-dark)' }}
+              className="flex shrink-0 items-center gap-4 self-stretch border-l pl-4"
+              style={{ borderColor: 'var(--game-border-faint)' }}
             >
               <RankBadge title={t('queue.soloDuo')} status={ranked.soloDuo} />
               <RankBadge title={t('queue.flex')} status={ranked.flex} />
             </div>
           )}
 
-          <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
+          <div
+            className="flex shrink-0 flex-nowrap items-center gap-3 self-stretch border-l pl-4"
+            style={{ borderColor: 'var(--game-border-faint)' }}
+          >
             {wallet && (
               <>
                 <MetaChip
@@ -152,20 +155,20 @@ export function AccountHeader({
               value={String(summary.honorLevel)}
             />
             <MetaChip
-              icon={<ServerIcon size={16} />}
+              icon={<ServerIcon size={20} />}
               label={t('accountSummary.server')}
               value={summary.region}
             />
             {summary.country && (
               <MetaChip
-                icon={<span className="text-base leading-none">{flag ?? '🏳️'}</span>}
+                icon={<span className="text-lg leading-none">{flag ?? '🏳️'}</span>}
                 label={t('accountSummary.country')}
                 value={summary.country}
               />
             )}
             {summary.createdSeasonId != null && (
               <MetaChip
-                icon={<SeasonIcon size={16} />}
+                icon={<SeasonIcon size={20} />}
                 label={t('accountSummary.season')}
                 value={String(summary.createdSeasonId)}
               />
@@ -182,7 +185,7 @@ export function AccountHeader({
           disabled={isRefreshing}
           title={t('accountSummary.refresh')}
           aria-label={t('accountSummary.refresh')}
-          className="flex shrink-0 items-center gap-2 rounded-md border border-[var(--game-accent-dark)] px-3 py-1.5 text-sm font-medium text-[var(--game-accent-soft)] transition-colors hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_0_var(--game-glow)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex shrink-0 items-center gap-2 rounded-md border border-[var(--game-accent-dark)] px-3 py-1.5 text-sm font-medium text-[var(--game-accent-soft)] transition-[border-color,box-shadow] duration-150 hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_1px_var(--game-glow)] disabled:cursor-not-allowed disabled:opacity-60"
           style={{ backgroundColor: 'var(--game-surface-elevated)' }}
         >
           <span className={isRefreshing ? 'animate-spin' : ''}>

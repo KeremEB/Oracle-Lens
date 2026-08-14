@@ -7,7 +7,7 @@ import type { LegacyFilter } from './SkinsSection';
 import type { LolTabId } from './LolTabId';
 
 const selectClass =
-  'rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2 py-1 text-sm text-[var(--game-accent-soft)] outline-none focus:border-[var(--game-accent)]';
+  'rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2 py-1 text-sm text-[var(--game-accent-soft)] outline-none transition-[border-color,box-shadow] duration-150 hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_1px_var(--game-glow)] focus:border-[var(--game-accent)]';
 
 const labelClass = 'text-sm text-[var(--game-accent-muted)]';
 

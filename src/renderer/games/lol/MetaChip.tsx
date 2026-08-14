@@ -14,23 +14,23 @@ export function MetaChip({
 }) {
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-      style={{ backgroundColor: 'var(--game-surface-elevated)' }}
+      className="flex items-center gap-2.5 rounded-full border px-3.5 py-2"
+      style={{ backgroundColor: 'var(--game-surface-sunken)', borderColor: 'var(--game-border-faint)' }}
     >
       <span
-        className="flex shrink-0 items-center justify-center"
+        className="flex h-5 w-5 shrink-0 items-center justify-center"
         style={{ color: 'var(--game-accent-muted)' }}
       >
         {icon}
       </span>
       <div className="leading-tight">
         <div
-          className="text-[9px] font-semibold uppercase tracking-wide"
+          className="text-[9px] font-semibold uppercase tracking-wide opacity-70"
           style={{ color: 'var(--game-accent-muted)' }}
         >
           {label}
         </div>
-        <div className="text-xs font-semibold tabular-nums" style={{ color: 'var(--game-accent-soft)' }}>
+        <div className="text-sm font-semibold tabular-nums" style={{ color: 'var(--game-accent-soft)' }}>
           {value}
         </div>
       </div>

@@ -32,7 +32,7 @@ function ExportButton({
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="flex shrink-0 items-center gap-1.5 rounded border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2.5 py-1.5 text-sm text-[var(--game-accent-soft)] transition-colors hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_0_var(--game-glow)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex shrink-0 items-center gap-1.5 rounded border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2.5 py-1.5 text-sm text-[var(--game-accent-soft)] transition-[border-color,box-shadow] duration-150 hover:border-[var(--game-accent)] hover:shadow-[0_0_8px_1px_var(--game-glow)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>

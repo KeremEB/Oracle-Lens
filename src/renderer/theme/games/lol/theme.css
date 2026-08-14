@@ -31,7 +31,9 @@
   --game-font-display: 'Cinzel', serif;
   --game-font-body: 'Inter', sans-serif;
   --game-radius: 2px;
-  --game-glow: var(--game-accent-2); /* hover halo while connected — hextech blue, not brand green */
+  --game-glow: var(--game-accent); /* hover halo while connected — the same gold as the game-rail icon */
+  --game-surface-sunken: #121925; /* a touch darker than surface-elevated — header meta chips */
+  --game-border-faint: #4a412866; /* low-alpha accent-dark — soft dividers, not structural borders */
 
   background-color: var(--game-surface);
   color: var(--game-accent-soft);
