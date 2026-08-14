@@ -52,16 +52,16 @@ export function ChampionCard({
   const crestOverflow = crestHeight / 2 - 2;
 
   return (
-    <div className="flex flex-col items-center gap-1 rounded border border-neutral-800 bg-neutral-900/50 p-2 text-center">
+    <div className="flex flex-col items-center gap-1 rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] p-2 text-center transition-colors hover:border-[var(--game-accent)]">
       <div className="relative aspect-square w-full">
         {champion.iconDataUrl ? (
           <img
             src={champion.iconDataUrl}
             alt={champion.championName}
-            className="h-full w-full rounded object-cover"
+            className="h-full w-full rounded-sm object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center rounded bg-neutral-800 text-xs text-neutral-500">
+          <div className="flex h-full w-full items-center justify-center rounded-sm bg-[var(--game-surface-elevated)] text-xs text-[var(--game-accent-muted)]">
             {champion.championName.slice(0, 2).toUpperCase()}
           </div>
         )}
@@ -110,7 +110,7 @@ export function ChampionCard({
       >
         {champion.championName}
       </span>
-      <span className="text-[11px] text-neutral-500">
+      <span className="text-[11px] text-[var(--game-accent-muted)]">
         {champion.masteryLevel > 0 ? `${champion.masteryLevel} · ` : ''}
         {champion.masteryPoints.toLocaleString('en-US')}
       </span>

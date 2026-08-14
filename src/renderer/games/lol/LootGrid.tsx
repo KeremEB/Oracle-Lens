@@ -11,7 +11,12 @@ export function LootGrid({ title, items }: { title: string; items: LootItem[] })
 
   return (
     <div className="w-full">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">{title}</h2>
+      <h2
+        className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--game-accent)]"
+        style={{ fontFamily: 'var(--game-font-display)' }}
+      >
+        {title}
+      </h2>
 
       <div
         ref={gridRef}

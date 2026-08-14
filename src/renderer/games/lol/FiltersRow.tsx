@@ -6,7 +6,9 @@ import type { LegacyFilter } from './SkinsSection';
 import type { LolTabId } from './LolTabId';
 
 const selectClass =
-  'rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100';
+  'rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-2 py-1 text-sm text-[var(--game-accent-soft)] outline-none focus:border-[var(--game-accent)]';
+
+const labelClass = 'text-sm text-[var(--game-accent-muted)]';
 
 // One horizontal row above the content area: search (always present) plus
 // whichever filter controls the active tab actually has. Filter state lives
@@ -46,18 +48,18 @@ export function FiltersRow({
   );
 
   return (
-    <div className="flex flex-nowrap items-center gap-4 overflow-x-auto border-b border-neutral-800 bg-neutral-900 px-6 py-3">
+    <div className="flex flex-nowrap items-center gap-4 overflow-x-auto border-b border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] px-6 py-3">
       <input
         type="text"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={t('search.placeholder')}
-        className="min-w-[96px] max-w-xs flex-1 rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500"
+        className="min-w-[96px] max-w-xs flex-1 rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-elevated)] px-3 py-1.5 text-sm text-[var(--game-accent-soft)] outline-none placeholder:text-[var(--game-accent-muted)] focus:border-[var(--game-accent)]"
       />
 
       {activeTab === 'champions' && (
         <div className="flex shrink-0 items-center gap-2">
-          <label htmlFor="champions-level-filter" className="text-sm text-neutral-400">
+          <label htmlFor="champions-level-filter" className={labelClass}>
             {t('champions.filterByLevel')}
           </label>
           <select
@@ -81,7 +83,7 @@ export function FiltersRow({
       {activeTab === 'skins' && (
         <>
           <div className="flex shrink-0 items-center gap-2">
-            <label htmlFor="skins-rarity" className="text-sm text-neutral-400">
+            <label htmlFor="skins-rarity" className={labelClass}>
               {t('skins.filterByRarity')}
             </label>
             <select
@@ -102,7 +104,7 @@ export function FiltersRow({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <label htmlFor="skins-legacy" className="text-sm text-neutral-400">
+            <label htmlFor="skins-legacy" className={labelClass}>
               {t('skins.filterByLegacy')}
             </label>
             <select

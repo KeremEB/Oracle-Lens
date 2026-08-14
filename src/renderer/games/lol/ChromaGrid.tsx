@@ -15,7 +15,12 @@ export function ChromaGrid({ title, chromas }: { title: string; chromas: OwnedCh
 
   return (
     <div className="w-full">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">{title}</h3>
+      <h3
+        className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--game-accent-muted)]"
+        style={{ fontFamily: 'var(--game-font-display)' }}
+      >
+        {title}
+      </h3>
 
       <div
         ref={gridRef}

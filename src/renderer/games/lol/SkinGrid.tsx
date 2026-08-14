@@ -12,7 +12,10 @@ export function SkinGrid({ title, skins }: { title?: string; skins: OwnedSkin[] 
   return (
     <div className="w-full">
       {title && (
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-300">
+        <h2
+          className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--game-accent)]"
+          style={{ fontFamily: 'var(--game-font-display)' }}
+        >
           {title}
         </h2>
       )}

@@ -31,7 +31,7 @@ export function ProfileIconsSection({
       {visible.map((icon) => (
         <div
           key={icon.iconId}
-          className="flex items-center justify-center rounded border border-neutral-800 bg-neutral-900/50 p-1"
+          className="flex items-center justify-center rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] p-1 transition-colors hover:border-[var(--game-accent)]"
         >
           <div className="aspect-square w-full">
             {icon.imageDataUrl ? (
@@ -41,7 +41,7 @@ export function ProfileIconsSection({
                 className="h-full w-full rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-500">
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--game-surface-elevated)] text-xs text-[var(--game-accent-muted)]">
                 ?
               </div>
             )}

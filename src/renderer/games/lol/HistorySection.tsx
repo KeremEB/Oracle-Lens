@@ -31,7 +31,10 @@ export function HistorySection({
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-300">
+        <h2
+          className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--game-accent)]"
+          style={{ fontFamily: 'var(--game-font-display)' }}
+        >
           {t('history.title')}
         </h2>
         <button
@@ -49,8 +52,8 @@ export function HistorySection({
             key={snapshot.id}
             className={
               snapshot.id === activeSnapshotId
-                ? 'flex items-center justify-between rounded border border-neutral-600 bg-neutral-800 px-3 py-2'
-                : 'flex items-center justify-between rounded border border-neutral-800 bg-neutral-900/50 px-3 py-2'
+                ? 'flex items-center justify-between rounded-sm border border-[var(--game-accent)] bg-[var(--game-surface-elevated)] px-3 py-2'
+                : 'flex items-center justify-between rounded-sm border border-[var(--game-accent-dark)] bg-[var(--game-surface-card)] px-3 py-2 hover:border-[var(--game-accent)]'
             }
           >
             <button

@@ -1,0 +1,31 @@
+/* LoL game theme — swapped in on the content container via the `.theme-lol`
+   class (see LolWorkspace.tsx). Brand chrome (header, game rail, sidebar)
+   never gets this class and stays on the neutral brand palette.
+
+   Fonts are self-hosted @fontsource packages, no CDN, no licensed Riot
+   fonts — see CLAUDE.md's Typography section. */
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+.theme-lol {
+  /* rgb/hex only — oklch breaks html2canvas export. */
+  --game-accent: #c8aa6e; /* gold */
+  --game-accent-dark: #785a28; /* dark gold, borders */
+  --game-accent-soft: #f0e6d2; /* light gold, body text */
+  --game-accent-muted: #8a7f68; /* dimmed gold, secondary text/placeholders */
+  --game-surface: #0a1428; /* deep navy, page background */
+  --game-surface-card: #091428; /* card background */
+  --game-surface-elevated: #1e2328; /* inputs, dropdowns */
+  --game-accent-2: #0ac8b9; /* hextech blue */
+  --game-accent-2-dark: #005a82;
+  --game-font-display: 'Cinzel', serif;
+  --game-font-body: 'Inter', sans-serif;
+  --game-radius: 2px;
+
+  background-color: var(--game-surface);
+  color: var(--game-accent-soft);
+  font-family: var(--game-font-body);
+}
