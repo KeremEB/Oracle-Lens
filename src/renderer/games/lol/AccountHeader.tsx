@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import type { AccountSummary, RankedSummary, Wallet } from '../../../shared/types/lol';
 import { t } from '../../core/i18n';
 import { ProfileIconBadge } from './ProfileIconBadge';
@@ -56,15 +56,20 @@ function HonorBadge({ level }: { level: number }) {
   );
 }
 
-// Full-width, above the game rail and sidebar — see App.tsx. Two rows, never
-// horizontal scroll or overflow:
-//  - top: identity | both ranked queues | meta chips, immediately after the
-//    ranked blocks (not pushed to the far edge — only the Refresh button
-//    gets `ml-auto`, so it's the one fixed point that never moves,
-//    regardless of window width or how many chips are showing). `flex-wrap`
-//    so the chips group (and, if the window is narrow enough, the chips
-//    themselves) drops to its own line instead of ever overflowing.
-//  - bottom: export controls, left-aligned under the profile icon.
+// Full-width, above the game rail and sidebar — see App.tsx. One single row:
+// identity | both ranked queues | meta chips, immediately after the ranked
+// blocks (not pushed to the far edge — only the Refresh button gets
+// `ml-auto`, so it's the one fixed point that never moves, regardless of
+// window width or how many chips are showing).
+//
+// Deliberately `flex-nowrap` + `overflow-x-auto`: nothing here may drop to a
+// second line, so a narrow window scrolls this row horizontally instead of
+// reflowing the refresh button and chips underneath the identity block.
+// Every child is `shrink-0` so items keep their natural size and the row
+// genuinely overflows (rather than each item squeezing to illegibility),
+// and the scroll container is this row alone — the page itself never gains
+// a horizontal scrollbar.
+//
 // Ranked and wallet arrive from separate fetches and can lag behind the
 // summary by a tick — each block simply doesn't render until its own data
 // is in. Meta fields the LCU didn't provide (country, creation season) are
@@ -75,28 +80,26 @@ export function AccountHeader({
   wallet,
   onRefresh,
   isRefreshing,
-  actions,
 }: {
   summary: AccountSummary;
   ranked: RankedSummary | null;
   wallet: Wallet | null;
   onRefresh: () => void;
   isRefreshing: boolean;
-  actions?: ReactNode;
 }) {
   const rpIconUrl = useStaticIconUrl(() => window.oracleLens.lol.getRiotPointsIconUrl());
   const beIconUrl = useStaticIconUrl(() => window.oracleLens.lol.getBlueEssenceIconUrl());
   const flag = summary.country ? countryFlagEmoji(summary.country) : null;
 
   return (
-    <header className="flex w-full shrink-0 flex-col gap-2 border-b border-neutral-800 bg-neutral-900 px-6 py-2.5">
-      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+    <header className="w-full shrink-0 border-b border-neutral-800 bg-neutral-900 px-6 py-2.5">
+      <div className="flex w-full flex-nowrap items-center gap-x-4 overflow-x-auto">
         <div className="flex shrink-0 items-center gap-3">
           <ProfileIconBadge
             profileIconId={summary.profileIconId}
             accountLevel={summary.accountLevel}
             summonerName={summary.summonerName}
-            size={45}
+            size={42}
           />
           <div>
             <div className="text-base font-semibold leading-tight">{summary.summonerName}</div>
@@ -115,7 +118,7 @@ export function AccountHeader({
 
         {/* No ml-auto here on purpose — these stay right next to the ranked
             blocks instead of drifting to the far edge as the window widens. */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
           {wallet && (
             <>
               <MetaChip
@@ -174,8 +177,6 @@ export function AccountHeader({
           {t('accountSummary.refresh')}
         </button>
       </div>
-
-      {actions && <div className="flex items-center">{actions}</div>}
     </header>
   );
 }

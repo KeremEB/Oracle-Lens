@@ -9,17 +9,21 @@ import { getRarityGemDataUrl } from '../rarityGemCache';
  * `<img>` tag itself decoding. Two card types are different: ChampionCard's
  * mastery crest/banner and SkinCard's rarity gem resolve lazily, one IPC
  * round trip per DISTINCT value (level or rarity), fired from each card's
- * own `useEffect` on mount. With 100+ cards mounting at once, that's 100+
- * effects racing to populate a handful of shared caches — capturing before
- * they've all settled is what left more than half of a large Champions
- * export with no crest/banner (or, if the whole capture ran ahead of React
- * even finishing those re-renders, no portrait either).
+ * own `useEffect` on mount.
  *
  * Resolving every distinct value up front — there are at most 10 mastery
  * levels, 4 banner tiers, and 6 gem rarities, regardless of collection size
  * — means every card's own effect resolves from an already-settled cached
- * promise instead of racing a fresh round trip, which is what actually
- * closes the gap rather than just waiting longer for it.
+ * promise, so those `<img>` tags are in the DOM before a capture starts
+ * scanning for them.
+ *
+ * This was originally written to fix the "half the cards export blank" bug
+ * and did NOT fix it; the real cause was html2canvas's own image cache
+ * evicting entries past its 100-entry default (see capture.ts's
+ * MAX_IMAGE_CACHE_SIZE). It's kept because it's still the cheapest way to
+ * get the lazily-resolved art into the DOM up front rather than letting the
+ * capture's settle-loop discover it a frame at a time — but it is not load-
+ * bearing for image correctness.
  */
 export async function prewarmCardImageCaches(
   champions: ChampionMasteryEntry[],

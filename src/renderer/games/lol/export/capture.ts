@@ -89,6 +89,14 @@ function waitForImage(img: HTMLImageElement): Promise<ImageReadiness> {
  * animation frames to fully settle. `onProgress` fires as each individual
  * image resolves, so callers can show real "N/total" progress rather than a
  * spinner-shaped lie.
+ *
+ * NOTE: this is here to guarantee a capture never runs against a half-built
+ * DOM (e.g. an export fired moments after the data lands). It is NOT what
+ * caused the long-standing "half the cards export blank" bug — that was
+ * html2canvas's own image cache evicting entries, see MAX_IMAGE_CACHE_SIZE
+ * above. Measurement on a real account found the DOM already at 572/572
+ * images loaded while 398 cards still captured blank, so don't reach for
+ * more waiting here if blank cards ever reappear.
  */
 async function waitForImagesToSettle(
   container: HTMLElement,
@@ -162,11 +170,35 @@ async function waitForFonts(): Promise<void> {
   ]);
 }
 
+// html2canvas-pro keeps its OWN image cache, separate from the DOM, and
+// evicts LRU-style once it exceeds `maxCacheSize` — which defaults to just
+// 100. Any section with more than 100 distinct image srcs therefore has its
+// earliest images evicted before the draw pass reaches them, and those cards
+// paint blank even though every <img> in the DOM is fully loaded.
+//
+// This was measured, not guessed: on a real account, Emotes had 141 unique
+// srcs and exactly 41 blank cards (141 - 100), Profile Icons 216 unique and
+// exactly 116 blank (216 - 100), while Ward Skins (31 unique, under the
+// limit) had zero — which is why that one tab always looked correct. Raising
+// the ceiling took all four affected sections to zero blanks with no
+// measurable capture-time cost.
+//
+// 10000 is the highest value html2canvas-pro accepts without warning (it
+// warns only above 1e4) and is far beyond any realistic collection size.
+// The entries are references to images already held in memory as data URLs
+// by the DOM itself, so this doesn't meaningfully add to peak memory.
+const MAX_IMAGE_CACHE_SIZE = 10000;
+
 async function captureElement(el: HTMLElement): Promise<HTMLCanvasElement> {
   // Matches the element's own rendered background rather than a hardcoded
   // guess, so a capture never shows a stray white/transparent edge.
   const backgroundColor = getComputedStyle(el).backgroundColor || '#171717';
-  return html2canvas(el, { scale: CAPTURE_SCALE, backgroundColor, logging: false });
+  return html2canvas(el, {
+    scale: CAPTURE_SCALE,
+    backgroundColor,
+    logging: false,
+    maxCacheSize: MAX_IMAGE_CACHE_SIZE,
+  });
 }
 
 export interface CapturedSection {
