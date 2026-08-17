@@ -12,9 +12,9 @@ const selectClass =
 const labelClass = 'text-sm text-[var(--game-accent-muted)]';
 
 // Which sort choices each tab offers, and their labels. Tabs with no
-// meaningful native order (everything but champions/skins) only ever offer
-// az/za — 'default' isn't a real option for them.
-const SORT_OPTIONS: Partial<Record<LolTabId, { value: SortOrder; labelKey: 'sort.masteryPoints' | 'sort.rarity' | 'sort.az' | 'sort.za' }[]>> = {
+// meaningful native order (everything but champions/skins/classic) only ever
+// offer az/za — 'default' isn't a real option for them.
+const SORT_OPTIONS: Partial<Record<LolTabId, { value: SortOrder; labelKey: 'sort.default' | 'sort.masteryPoints' | 'sort.rarity' | 'sort.az' | 'sort.za' }[]>> = {
   champions: [
     { value: 'default', labelKey: 'sort.masteryPoints' },
     { value: 'az', labelKey: 'sort.az' },
@@ -22,6 +22,14 @@ const SORT_OPTIONS: Partial<Record<LolTabId, { value: SortOrder; labelKey: 'sort
   ],
   skins: [
     { value: 'default', labelKey: 'sort.rarity' },
+    { value: 'az', labelKey: 'sort.az' },
+    { value: 'za', labelKey: 'sort.za' },
+  ],
+  // Spans two different native orders (champion mastery points, skin
+  // rarity) under one shared control — each grid still interprets 'default'
+  // its own way, same as it always has; only the label is generic here.
+  classic: [
+    { value: 'default', labelKey: 'sort.default' },
     { value: 'az', labelKey: 'sort.az' },
     { value: 'za', labelKey: 'sort.za' },
   ],
@@ -118,7 +126,7 @@ export function FiltersRow({
       />
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 lg:flex-nowrap lg:overflow-x-auto">
-        {activeTab === 'champions' && (
+        {(activeTab === 'champions' || activeTab === 'classic') && (
           <div className="flex shrink-0 items-center gap-2">
             <label htmlFor="champions-level-filter" className={`${labelClass} hidden lg:inline`}>
               {t('champions.filterByLevel')}
@@ -142,7 +150,7 @@ export function FiltersRow({
           </div>
         )}
 
-        {activeTab === 'skins' && (
+        {(activeTab === 'skins' || activeTab === 'classic') && (
           <>
             <div className="flex shrink-0 items-center gap-2">
               <label htmlFor="skins-rarity" className={`${labelClass} hidden lg:inline`}>

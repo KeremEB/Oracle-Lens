@@ -1,6 +1,13 @@
 import type { OwnedChroma } from '../../../shared/types/lol';
 
-export function ChromaSwatch({ chroma }: { chroma: OwnedChroma }) {
+// Chromas render in one flat grid now, not one grid per skin (see
+// ChromasSection.tsx) — each card carries its parent skin's name itself
+// since there's no group header to supply it anymore.
+export interface FlatChroma extends OwnedChroma {
+  skinName: string;
+}
+
+export function ChromaSwatch({ chroma }: { chroma: FlatChroma }) {
   const paletteBackground =
     chroma.colors.length > 1
       ? `linear-gradient(135deg, ${chroma.colors.join(', ')})`
@@ -30,6 +37,9 @@ export function ChromaSwatch({ chroma }: { chroma: OwnedChroma }) {
       </div>
 
       <span className="w-full truncate text-xs">{chroma.name}</span>
+      <span className="w-full truncate text-[10px]" style={{ color: 'var(--game-accent-muted)' }}>
+        {chroma.skinName}
+      </span>
     </div>
   );
 }

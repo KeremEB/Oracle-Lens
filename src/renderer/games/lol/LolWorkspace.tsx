@@ -20,15 +20,23 @@ import type { SortOrder } from '../../core/sortOrder';
 import { FiltersRow } from './FiltersRow';
 import { ChampionsSection } from './ChampionsSection';
 import { SkinsSection, type LegacyFilter } from './SkinsSection';
+import { ClassicSection } from './ClassicSection';
 import { ChromasSection } from './ChromasSection';
 import { WardSkinsSection } from './WardSkinsSection';
 import { EmotesSection } from './EmotesSection';
 import { ProfileIconsSection } from './ProfileIconsSection';
 import { LootSection } from './LootSection';
 import { HistorySection } from './HistorySection';
+import { NotesSection } from '../../core/NotesSection';
 import { ExportPanel } from './export/ExportPanel';
 import type { ReportData } from './export/reportData';
 import type { LolTabId } from './LolTabId';
+
+// Notes is a general-purpose, account-independent notepad (see
+// NotesSection.tsx) — not real LoL data, so it's layered on top of LolTabId
+// here rather than added to it. It lives in this same sidebar/tab shell
+// because that's the only sidebar the app has today.
+type WorkspaceTabId = LolTabId | 'notes';
 
 // Individual chromas owned, not "skins that have any chroma" — matches
 // export/reportData.ts's computeCollectionCounts.
@@ -71,27 +79,29 @@ export function LolWorkspace({
   onDeleteSnapshot: (id: string) => void;
   onClearSnapshots: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState<LolTabId>('champions');
+  const [activeTab, setActiveTab] = useState<WorkspaceTabId>('champions');
   const [searchQuery, setSearchQuery] = useState('');
   const [rarityFilter, setRarityFilter] = useState<SkinRarity | 'all'>('all');
   const [legacyFilter, setLegacyFilter] = useState<LegacyFilter>('all');
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all');
 
   // Each tab remembers its own sort choice independently — switching tabs
-  // and back must not reset it. 'champions'/'skins' default to their native
-  // order (mastery points / rarity); every other tab defaults to A-Z.
+  // and back must not reset it. 'champions'/'skins'/'classic' default to
+  // their native order (mastery points / rarity); every other tab defaults
+  // to A-Z.
   const [sortByTab, setSortByTab] = useState<Record<Exclude<LolTabId, 'history'>, SortOrder>>({
     champions: 'default',
     skins: 'default',
+    classic: 'default',
     chromas: 'az',
     wardSkins: 'az',
     emotes: 'az',
     profileIcons: 'az',
     loot: 'az',
   });
-  const activeSortOrder = activeTab === 'history' ? 'az' : sortByTab[activeTab];
+  const activeSortOrder = activeTab === 'history' || activeTab === 'notes' ? 'az' : sortByTab[activeTab];
   const setActiveSortOrder = (value: SortOrder): void => {
-    if (activeTab === 'history') return;
+    if (activeTab === 'history' || activeTab === 'notes') return;
     setSortByTab((prev) => ({ ...prev, [activeTab]: value }));
   };
 
@@ -103,18 +113,32 @@ export function LolWorkspace({
     if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
   }, [activeTab]);
 
+  // Champions/skins counts exclude special-mode (isSpecialMode) entries now
+  // that those live in the Classic tab instead — see ClassicSection.tsx.
+  const standardChampionsCount = champions.data?.filter((c) => !c.isSpecialMode).length;
+  const standardSkinsCount = skins.data?.filter((s) => !s.isSpecialMode).length;
+  const classicCount =
+    champions.data && skins.data
+      ? champions.data.filter((c) => c.isSpecialMode).length +
+        skins.data.filter((s) => s.isSpecialMode).length
+      : undefined;
+
   const sidebarItems: SidebarNavItem[] = [
-    { id: 'champions', label: t('champions.title'), count: champions.data?.length },
-    { id: 'skins', label: t('skins.title'), count: skins.data?.length },
+    { id: 'champions', label: t('champions.title'), count: standardChampionsCount },
+    { id: 'skins', label: t('skins.title'), count: standardSkinsCount },
     { id: 'chromas', label: t('chromas.title'), count: countChromas(chromas.data) },
     { id: 'wardSkins', label: t('wardSkins.navTitle'), count: wardSkins.data?.length },
     { id: 'emotes', label: t('emotes.title'), count: emotes.data?.length },
     { id: 'profileIcons', label: t('profileIcons.title'), count: profileIcons.data?.length },
+    // Rotating special-mode/event content pulled out of Champions/Skins —
+    // its own group, separate from the owned-collection tabs above.
+    { id: 'classic', label: t('classic.title'), count: classicCount, dividerBefore: true },
     // Loot is the player's unclaimed inventory, entirely separate from the
     // owned-collection tabs above — dividerBefore breaks it into its own
     // visual group rather than reading as one more collection tab.
     { id: 'loot', label: t('loot.title'), count: loot.data?.length, dividerBefore: true },
     { id: 'history', label: t('history.title'), count: snapshots.length, dividerBefore: true },
+    { id: 'notes', label: t('notes.title'), dividerBefore: true },
   ];
 
   const exportData: ReportData | null =
@@ -136,8 +160,10 @@ export function LolWorkspace({
         }
       : null;
 
+  // Notes has no export section (see exportSections.ts) — activeTab must be
+  // narrowed to a real LolTabId before it reaches ExportPanel.
   const exportPanel =
-    exportData && ranked ? (
+    activeTab !== 'notes' && exportData && ranked ? (
       <ExportPanel summary={summary} ranked={ranked} data={exportData} activeTab={activeTab} />
     ) : undefined;
 
@@ -147,24 +173,28 @@ export function LolWorkspace({
           wraps the app root in App.tsx, not from a class applied here — so
           the sidebar and this content column always agree with the header
           and game rail on which palette is active. */}
-      <SidebarNav items={sidebarItems} activeId={activeTab} onSelect={(id) => setActiveTab(id as LolTabId)} />
+      <SidebarNav items={sidebarItems} activeId={activeTab} onSelect={(id) => setActiveTab(id as WorkspaceTabId)} />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <FiltersRow
-          activeTab={activeTab}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          rarityFilter={rarityFilter}
-          onRarityFilterChange={setRarityFilter}
-          legacyFilter={legacyFilter}
-          onLegacyFilterChange={setLegacyFilter}
-          levelFilter={levelFilter}
-          onLevelFilterChange={setLevelFilter}
-          champions={champions.data}
-          sortOrder={activeSortOrder}
-          onSortOrderChange={setActiveSortOrder}
-          exportPanel={exportPanel}
-        />
+        {/* Notes has no search/filter/sort/export — it's a plain textarea,
+            not a filterable collection — so the whole row is skipped for it. */}
+        {activeTab !== 'notes' && (
+          <FiltersRow
+            activeTab={activeTab}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            rarityFilter={rarityFilter}
+            onRarityFilterChange={setRarityFilter}
+            legacyFilter={legacyFilter}
+            onLegacyFilterChange={setLegacyFilter}
+            levelFilter={levelFilter}
+            onLevelFilterChange={setLevelFilter}
+            champions={champions.data}
+            sortOrder={activeSortOrder}
+            onSortOrderChange={setActiveSortOrder}
+            exportPanel={exportPanel}
+          />
+        )}
 
         <div ref={contentScrollRef} className="min-h-0 flex-1 overflow-y-auto p-6">
           <GridDensityProvider>
@@ -202,6 +232,28 @@ export function LolWorkspace({
                       rarityFilter={rarityFilter}
                       legacyFilter={legacyFilter}
                       sortOrder={sortByTab.skins}
+                    />
+                  )}
+                </>
+              )}
+
+              {activeTab === 'classic' && (
+                <>
+                  {(champions.error || skins.error) && (
+                    <p className="text-red-400">{champions.error || skins.error}</p>
+                  )}
+                  {!champions.error && !skins.error && (!champions.data || !skins.data) && (
+                    <p className="text-neutral-400">{t('classic.loading')}</p>
+                  )}
+                  {champions.data && skins.data && (
+                    <ClassicSection
+                      champions={champions.data}
+                      skins={skins.data}
+                      searchQuery={searchQuery}
+                      levelFilter={levelFilter}
+                      rarityFilter={rarityFilter}
+                      legacyFilter={legacyFilter}
+                      sortOrder={sortByTab.classic}
                     />
                   )}
                 </>
@@ -292,6 +344,8 @@ export function LolWorkspace({
                   onClearAll={onClearSnapshots}
                 />
               )}
+
+              {activeTab === 'notes' && <NotesSection />}
             </div>
           </GridDensityProvider>
         </div>

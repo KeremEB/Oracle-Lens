@@ -3,6 +3,7 @@ import type { AccountSummary, RankedSummary } from '../../../../shared/types/lol
 import { FixedGridDensityProvider } from '../../../core/GridDensityContext';
 import { ChampionsSection } from '../ChampionsSection';
 import { SkinsSection } from '../SkinsSection';
+import { ClassicSection } from '../ClassicSection';
 import { ChromasSection } from '../ChromasSection';
 import { WardSkinsSection } from '../WardSkinsSection';
 import { EmotesSection } from '../EmotesSection';
@@ -71,6 +72,9 @@ export function ExportCaptureTree({
   data: ReportData;
   generatedAt: Date;
 }) {
+  // Champions/skins/classic counts here are standard-vs-special-mode split,
+  // matching what ChampionsSection/SkinsSection/ClassicSection actually
+  // render below — see computeCollectionCounts.
   const counts = computeCollectionCounts(data);
 
   return (
@@ -101,13 +105,13 @@ export function ExportCaptureTree({
       <ExportSectionFrame
         id="champions"
         summary={summary}
-        itemCount={data.champions.length}
+        itemCount={counts.champions}
         generatedAt={generatedAt}
       >
         <ChampionsSection champions={data.champions} searchQuery="" levelFilter="all" sortOrder="default" />
       </ExportSectionFrame>
 
-      <ExportSectionFrame id="skins" summary={summary} itemCount={data.skins.length} generatedAt={generatedAt}>
+      <ExportSectionFrame id="skins" summary={summary} itemCount={counts.skins} generatedAt={generatedAt}>
         <SkinsSection
           skins={data.skins}
           searchQuery=""
@@ -141,6 +145,18 @@ export function ExportCaptureTree({
         generatedAt={generatedAt}
       >
         <ProfileIconsSection icons={data.profileIcons} searchQuery="" sortOrder="az" />
+      </ExportSectionFrame>
+
+      <ExportSectionFrame id="classic" summary={summary} itemCount={counts.classic} generatedAt={generatedAt}>
+        <ClassicSection
+          champions={data.champions}
+          skins={data.skins}
+          searchQuery=""
+          levelFilter="all"
+          rarityFilter="all"
+          legacyFilter="all"
+          sortOrder="default"
+        />
       </ExportSectionFrame>
 
       <ExportSectionFrame id="loot" summary={summary} itemCount={data.loot.length} generatedAt={generatedAt}>

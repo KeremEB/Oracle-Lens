@@ -10,6 +10,8 @@ export const IPC_CHANNELS = {
     saveSnapshot: 'core:saveSnapshot',
     deleteSnapshot: 'core:deleteSnapshot',
     clearSnapshots: 'core:clearSnapshots',
+    getNotes: 'core:getNotes',
+    saveNotes: 'core:saveNotes',
   },
   lol: {
     connectionStatus: 'lol:connectionStatus',

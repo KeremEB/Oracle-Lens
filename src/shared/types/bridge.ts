@@ -32,6 +32,8 @@ export interface CoreBridge {
   }): Promise<AccountSnapshotMeta>;
   deleteSnapshot(id: string): Promise<void>;
   clearSnapshots(gameId?: GameId): Promise<void>;
+  getNotes(): Promise<string>;
+  saveNotes(content: string): Promise<void>;
 }
 
 export interface LolBridge {

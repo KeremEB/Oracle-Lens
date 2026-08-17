@@ -9,6 +9,7 @@ import {
   listSnapshots,
   saveSnapshot,
 } from './core/store/snapshots';
+import { getNotes, saveNotes } from './core/store/notes';
 import { saveExportFile } from './core/export/saveExportFile';
 import type { SaveExportRequest } from '../shared/types/export';
 import { LeagueOfLegendsProvider } from './games/lol/provider';
@@ -55,6 +56,9 @@ ipcMain.handle(
 );
 ipcMain.handle(IPC_CHANNELS.core.deleteSnapshot, (_event, id: string) => deleteSnapshot(id));
 ipcMain.handle(IPC_CHANNELS.core.clearSnapshots, (_event, gameId?: GameId) => clearSnapshots(gameId));
+
+ipcMain.handle(IPC_CHANNELS.core.getNotes, () => getNotes());
+ipcMain.handle(IPC_CHANNELS.core.saveNotes, (_event, content: string) => saveNotes(content));
 
 ipcMain.handle(IPC_CHANNELS.lol.connectionStatus, () => lolProvider.getStatus());
 ipcMain.handle(IPC_CHANNELS.lol.accountSummary, () => lolProvider.getAccountSummary());

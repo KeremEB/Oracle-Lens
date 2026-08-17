@@ -11,6 +11,7 @@ export const EXPORTABLE_TABS: readonly LolTabId[] = [
   'wardSkins',
   'emotes',
   'profileIcons',
+  'classic',
   'loot',
 ];
 
@@ -33,6 +34,8 @@ export function exportSectionLabel(id: ExportSectionId): string {
       return t('emotes.title');
     case 'profileIcons':
       return t('profileIcons.title');
+    case 'classic':
+      return t('classic.title');
     case 'loot':
       return t('loot.title');
     case 'history':
@@ -58,6 +61,8 @@ export function exportSectionFileToken(id: ExportSectionId): string {
       return 'Emotes';
     case 'profileIcons':
       return 'ProfileIcons';
+    case 'classic':
+      return 'Classic';
     case 'loot':
       return 'Loot';
     case 'history':

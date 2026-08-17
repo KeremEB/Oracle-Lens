@@ -20,6 +20,10 @@ const core: OracleLensBridge['core'] = {
   deleteSnapshot: (id) => ipcRenderer.invoke(IPC_CHANNELS.core.deleteSnapshot, id),
 
   clearSnapshots: (gameId) => ipcRenderer.invoke(IPC_CHANNELS.core.clearSnapshots, gameId),
+
+  getNotes: () => ipcRenderer.invoke(IPC_CHANNELS.core.getNotes),
+
+  saveNotes: (content) => ipcRenderer.invoke(IPC_CHANNELS.core.saveNotes, content),
 };
 
 const lol: OracleLensBridge['lol'] = {

@@ -33,6 +33,7 @@ export function ExportAccountDetailsCard({
         <StatTile label={t('wardSkins.title')} value={counts.wardSkins} />
         <StatTile label={t('emotes.title')} value={counts.emotes} />
         <StatTile label={t('profileIcons.title')} value={counts.profileIcons} />
+        <StatTile label={t('classic.title')} value={counts.classic} />
         <StatTile label={t('loot.title')} value={counts.loot} />
       </div>
     </div>

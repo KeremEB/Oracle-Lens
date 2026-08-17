@@ -26,7 +26,7 @@ export function LootSection({
   }, [items, searchQuery, sortOrder]);
 
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className="flex w-full flex-col gap-4">
       {grouped.map(({ category, items: categoryItems }) => (
         <LootGrid key={category} title={lootCategoryLabel(category)} items={categoryItems} />
       ))}

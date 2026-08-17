@@ -47,16 +47,25 @@ export async function mapOwnedChromas(
     },
   );
 
-  // Defensive dedup by skinId: some accounts see the same skin group come
-  // back from more than one per-champion query (observed live; the LCU
-  // doesn't document why — possibly a skin cross-linked to more than one
-  // champion ID). A real chroma group should never legitimately appear
-  // twice, so collapse rather than try to prove which query "owns" it.
-  const seen = new Set<number>();
+  // Defensive dedup by skinId AND skinName: some accounts see the same skin
+  // group come back from more than one per-champion query (observed live;
+  // the LCU doesn't document why — possibly a skin cross-linked to more
+  // than one champion ID). The id-based check alone wasn't enough — some
+  // duplicates observed live carry two DIFFERENT skin ids for what is
+  // visibly the same skin (older pre-Chroma-system recolor skins, e.g.
+  // Coven Morgana / Dragonslayer Pantheon, appear to be exposed as more
+  // than one skin entry by this endpoint) — so name is checked too, on the
+  // assumption two genuinely different skins never share an exact display
+  // name. A real chroma group should never legitimately appear twice, so
+  // collapse rather than try to prove which query "owns" it.
+  const seenIds = new Set<number>();
+  const seenNames = new Set<string>();
   const deduped: SkinChromaGroup[] = [];
   for (const group of perChampion.flat()) {
-    if (seen.has(group.skinId)) continue;
-    seen.add(group.skinId);
+    const nameKey = group.skinName.trim().toLowerCase();
+    if (seenIds.has(group.skinId) || seenNames.has(nameKey)) continue;
+    seenIds.add(group.skinId);
+    seenNames.add(nameKey);
     deduped.push(group);
   }
   return deduped;
