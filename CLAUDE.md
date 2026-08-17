@@ -3,9 +3,9 @@
 Desktop application that displays a detailed inventory and statistics report for the
 user's **own** Riot Games accounts by connecting to the locally running Riot clients.
 
-**League of Legends ships first.** Teamfight Tactics and VALORANT follow in later
-releases. The architecture must support this from day one — see *Multi-game
-architecture* below. Do not write LoL-specific logic into shared layers.
+**League of Legends ships first.** VALORANT follows in a later release. The
+architecture must support this from day one — see *Multi-game architecture* below.
+Do not write LoL-specific logic into shared layers.
 
 ---
 
@@ -55,16 +55,13 @@ Decided. Do not substitute without being asked.
 This is the single most important structural decision in the project.
 
 **Principle:** a game-agnostic core, plus one self-contained module per game. Adding
-TFT or VALORANT should mean adding a folder, not editing the core.
+VALORANT should mean adding a folder, not editing the core.
 
 ### Connection reality per game
 
-The three games do **not** share a connection model:
+The two games do **not** share a connection model:
 
 - **League of Legends** — League Client (LCU) lockfile. Full inventory and ranked data.
-- **Teamfight Tactics** — served by the *same* League Client. Same connection, different
-  endpoints (Little Legends, Tacticians, Arenas, Boons, TFT-specific ranked queues).
-  This is why TFT is the cheap second game.
 - **VALORANT** — a *separate* Riot Client lockfile and a different local API surface,
   with its own auth flow and entitlements. Treat it as a genuinely separate provider.
   Do not assume any LCU pattern carries over.
@@ -83,7 +80,6 @@ src/
         provider.ts   implements GameProvider
         endpoints/
         mappers/      LCU payload -> domain types
-      tft/            (later — reuses the LoL client connection)
       valorant/       (later — separate Riot Client connection)
     index.ts
   preload/
@@ -93,7 +89,6 @@ src/
     games/
       lol/            LoL screens, cards, sections, export
         export/       section capture, ZIP bundling, text PDF
-      tft/            (later)
       valorant/       (later)
     theme/
       brand.ts        Oracle Lens identity (waiting/disconnected states)
@@ -174,7 +169,7 @@ deliberate change from the original "constant brand chrome" plan.
 - Champion and skin art is already colourful: the theme handles borders and
   surfaces, the card interior belongs to the artwork.
 
-TFT and VALORANT token sets are stubs until those providers land.
+The VALORANT token set is a stub until that provider lands.
 
 Each game theme is a token set applied by swapping CSS custom properties.
 **Never fork components per game for styling reasons** — one component, tokens decide
@@ -205,7 +200,7 @@ and must not be committed or bundled.** Open alternatives via `@fontsource`:
 
 - **Cinzel** — display headings, section titles (stands in for Beaufort).
 - **Inter** — body text and numerals.
-- TFT and VALORANT will pick their own stand-ins when those themes land.
+- VALORANT will pick its own stand-in when that theme lands.
 
 Declare fonts as theme tokens, never hardcoded in components. If a font looks wrong
 next to the real game, change the *alternative* — do not reach for the licensed original.
@@ -271,9 +266,7 @@ pricing data and RP package tables. See non-negotiable rule 4.
 
 ### Later
 
-- **v2 — Teamfight Tactics.** Reuses the LoL client connection. TFT ranked, Little
-  Legends, Tacticians, Arenas, Boons, TFT theme.
-- **v3 — VALORANT.** Separate Riot Client provider. Ranked, agents, skins and
+- **v2 — VALORANT.** Separate Riot Client provider. Ranked, agents, skins and
   variants, buddies, sprays, player cards, titles, VALORANT theme.
 
 ---

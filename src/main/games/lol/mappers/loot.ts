@@ -39,9 +39,9 @@ function currencyLabel(lootName: string): string {
 // against Community Dragon's rcp-fe-lol-loot trans strings (loot_category_*)
 // and a live account's response: CHAMPION, SKIN, WARDSKIN, EMOTE, CHEST
 // (labelled "Materials" — covers real chests, key(fragment)s, AND Mythic
-// Essence together), SUMMONERICON, ETERNALS (Statstones), COMPANION (TFT
-// Tacticians, served from the same endpoint but out of scope until the TFT
-// module exists).
+// Essence together), SUMMONERICON, ETERNALS (Statstones), COMPANION
+// (Tacticians, served from the same endpoint but not LoL inventory —
+// permanently out of scope).
 //
 // The user's five requested buckets split the client's single "Materials"
 // group in two, which `displayCategories` alone can't distinguish — done by
@@ -52,7 +52,7 @@ function currencyLabel(lootName: string): string {
 // lootName prefix as a fallback alongside MATERIAL_key_fragment.
 function classify(item: LcuLootItem): LootCategory | null {
   if (!item.lootName) return null; // an occasional fully-blank placeholder entry with nothing to render
-  if (item.displayCategories === 'COMPANION') return null; // TFT loot — out of scope until the TFT module ships
+  if (item.displayCategories === 'COMPANION') return null; // Tacticians — not LoL inventory, permanently out of scope
 
   if (item.displayCategories === 'CHAMPION') return 'championShards';
   if (item.displayCategories === 'SKIN') return 'skinShards';

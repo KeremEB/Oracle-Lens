@@ -1,6 +1,6 @@
 // GameProvider contract, connection state, and other cross-game primitives.
 
-export type GameId = 'lol' | 'tft' | 'valorant';
+export type GameId = 'lol' | 'valorant';
 
 export type ConnectionState = 'unavailable' | 'connecting' | 'connected' | 'error';
 

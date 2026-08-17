@@ -148,7 +148,6 @@ A few things that took longer than expected, in case they save someone else the 
 ## Roadmap
 
 - [x] League of Legends
-- [ ] Teamfight Tactics — same client connection, different endpoints
 - [ ] VALORANT — separate Riot client, separate provider
 
 The architecture is game-agnostic: each game is a self-contained provider behind a

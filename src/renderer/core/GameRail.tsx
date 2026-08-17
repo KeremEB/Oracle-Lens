@@ -10,7 +10,7 @@ const RAIL_WIDTH = 60;
 // like a badge, it always wears that specific game's colors (from
 // theme/games/lol/tokens.ts) so the rail reads as a row of game icons even
 // when the surrounding chrome is on brand colors — active glows, inactive
-// stays faded. Only one entry exists today; TFT/VALORANT add more entries
+// stays faded. Only one entry exists today; VALORANT adds another entry
 // here later without touching anything else, per the "add a folder, not
 // edit the core" architecture.
 const GAMES: ReadonlyArray<{ id: GameId; label: string; bg: string; fg: string; font: string }> = [
