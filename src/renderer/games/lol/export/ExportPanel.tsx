@@ -2,11 +2,30 @@ import { useRef, useState, type ReactNode } from 'react';
 import type { AccountSummary, RankedSummary } from '../../../../shared/types/lol';
 import type { LolTabId } from '../LolTabId';
 import { t } from '../../../core/i18n';
-import { useExportFlow } from './useExportFlow';
+import { useExportFlow, type ExportStage } from './useExportFlow';
 import { ExportCaptureTree } from './ExportCaptureTree';
 import { EXPORTABLE_TABS, exportSectionLabel } from './exportSections';
 import { ArchiveIcon, DocumentTextIcon, ImageFileIcon } from './exportIcons';
 import type { ReportData } from './reportData';
+
+function stageMessage(stage: ExportStage): string {
+  switch (stage.kind) {
+    case 'idle':
+      return '';
+    case 'loadingImages':
+      return `${t('export.loadingImages')} ${stage.label} (${stage.done}/${stage.total})`;
+    case 'capturing':
+      return `${t('export.capturing')} ${stage.label} (${stage.done}/${stage.total})`;
+    case 'building':
+      return t('export.building');
+    case 'saving':
+      return t('export.saving');
+    case 'done':
+      return stage.degraded ? `${t('export.done')} ${t('export.degradedNote')}` : t('export.done');
+    case 'error':
+      return `${t('export.error')}: ${stage.message}`;
+  }
+}
 
 // Icon always shown; the text label collapses at the `sm` breakpoint so the
 // three buttons plus the search box and any tab filters never force this row
@@ -96,19 +115,17 @@ export function ExportPanel({
         onClick={exportTextPdf}
       />
 
+      {/* title carries the full text for the 'done'+degraded case, which
+          regularly overflows this box's width — every other message is
+          short enough that truncation never actually triggers, so the
+          tooltip is a no-op for them. */}
       {stage.kind !== 'idle' && (
         <p
           className="min-w-0 max-w-[16rem] shrink truncate text-xs"
           style={{ color: 'var(--game-accent-muted)' }}
+          title={stageMessage(stage)}
         >
-          {stage.kind === 'loadingImages' &&
-            `${t('export.loadingImages')} ${stage.label} (${stage.done}/${stage.total})`}
-          {stage.kind === 'capturing' &&
-            `${t('export.capturing')} ${stage.label} (${stage.done}/${stage.total})`}
-          {stage.kind === 'building' && t('export.building')}
-          {stage.kind === 'saving' && t('export.saving')}
-          {stage.kind === 'done' && t('export.done')}
-          {stage.kind === 'error' && `${t('export.error')}: ${stage.message}`}
+          {stageMessage(stage)}
         </p>
       )}
 

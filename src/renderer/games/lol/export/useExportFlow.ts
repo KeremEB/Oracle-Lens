@@ -2,7 +2,6 @@ import { useEffect, useState, type RefObject } from 'react';
 import type { AccountSummary, RankedSummary } from '../../../../shared/types/lol';
 import type { LolTabId } from '../LolTabId';
 import { captureReportSections } from './capture';
-import { canvasToPngBytes } from './buildFile';
 import { buildPngZip } from './buildPngZip';
 import { buildTextReportPdf } from './buildTextReportPdf';
 import { buildExportFileName } from './fileName';
@@ -16,10 +15,13 @@ export type ExportStage =
   | { kind: 'capturing'; done: number; total: number; label: string }
   | { kind: 'building' }
   | { kind: 'saving' }
-  | { kind: 'done'; filePath: string }
+  | { kind: 'done'; filePath: string; degraded: boolean }
   | { kind: 'error'; message: string };
 
 const DONE_MESSAGE_MS = 4000;
+// Longer than the plain "Saved." case — the degraded note is more text and
+// worth actually giving the user time to read.
+const DEGRADED_DONE_MESSAGE_MS = 8000;
 
 /**
  * Drives all three export actions. `captureRootRef` points at the always-
@@ -46,18 +48,19 @@ export function useExportFlow(
 
   useEffect(() => {
     if (stage.kind !== 'done') return;
-    const timer = setTimeout(() => setStage({ kind: 'idle' }), DONE_MESSAGE_MS);
+    const ms = stage.degraded ? DEGRADED_DONE_MESSAGE_MS : DONE_MESSAGE_MS;
+    const timer = setTimeout(() => setStage({ kind: 'idle' }), ms);
     return () => clearTimeout(timer);
   }, [stage]);
 
-  const savePng = async (bytes: Uint8Array, tabToken: string): Promise<void> => {
+  const savePng = async (bytes: Uint8Array, tabToken: string, degraded: boolean): Promise<void> => {
     setStage({ kind: 'saving' });
     const result = await window.oracleLens.core.saveExportFile({
       suggestedName: buildExportFileName(summary.summonerName, tabToken, generatedAt, 'png'),
       filters: [{ name: 'PNG Image', extensions: ['png'] }],
       data: bytes,
     });
-    setStage(result.canceled ? { kind: 'idle' } : { kind: 'done', filePath: result.filePath ?? '' });
+    setStage(result.canceled ? { kind: 'idle' } : { kind: 'done', filePath: result.filePath ?? '', degraded });
   };
 
   const exportAllPng = (): void => {
@@ -76,6 +79,7 @@ export function useExportFlow(
 
         setStage({ kind: 'building' });
         const zipBytes = await buildPngZip(sections, summary.summonerName, generatedAt);
+        const anyDegraded = sections.some((section) => section.degraded);
 
         setStage({ kind: 'saving' });
         const result = await window.oracleLens.core.saveExportFile({
@@ -83,7 +87,11 @@ export function useExportFlow(
           filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
           data: zipBytes,
         });
-        setStage(result.canceled ? { kind: 'idle' } : { kind: 'done', filePath: result.filePath ?? '' });
+        setStage(
+          result.canceled
+            ? { kind: 'idle' }
+            : { kind: 'done', filePath: result.filePath ?? '', degraded: anyDegraded },
+        );
       } catch (err) {
         setStage({ kind: 'error', message: err instanceof Error ? err.message : String(err) });
       }
@@ -106,8 +114,7 @@ export function useExportFlow(
         if (sections.length === 0) return;
 
         setStage({ kind: 'building' });
-        const bytes = await canvasToPngBytes(sections[0].canvas);
-        await savePng(bytes, exportSectionFileToken(tabId as ExportSectionId));
+        await savePng(sections[0].pngBytes, exportSectionFileToken(tabId as ExportSectionId), sections[0].degraded);
       } catch (err) {
         setStage({ kind: 'error', message: err instanceof Error ? err.message : String(err) });
       }
@@ -128,7 +135,10 @@ export function useExportFlow(
           filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
           data: bytes,
         });
-        setStage(result.canceled ? { kind: 'idle' } : { kind: 'done', filePath: result.filePath ?? '' });
+        // Text PDF never touches canvas/capture, so degradation doesn't apply here.
+        setStage(
+          result.canceled ? { kind: 'idle' } : { kind: 'done', filePath: result.filePath ?? '', degraded: false },
+        );
       } catch (err) {
         setStage({ kind: 'error', message: err instanceof Error ? err.message : String(err) });
       }

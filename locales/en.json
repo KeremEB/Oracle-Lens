@@ -104,6 +104,7 @@
   "export.building": "Building file...",
   "export.saving": "Choose where to save...",
   "export.done": "Saved.",
+  "export.degradedNote": "Some sections were rendered at reduced quality due to their size.",
   "export.error": "Export failed",
   "export.textReportTitle": "Account Report",
   "export.sectionAccountSummary": "Account Summary",

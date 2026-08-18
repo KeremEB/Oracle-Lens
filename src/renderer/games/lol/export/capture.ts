@@ -5,9 +5,32 @@
 // whose whole reason to exist is oklch/oklab/lch/lab/color() support — same
 // API, so this is the only line that needed to change.
 import html2canvas from 'html2canvas-pro';
+import { canvasToPngBytes } from './buildFile';
 
 /** Physical-pixel multiplier for captures — 2x for a retina-sharp result. */
 export const CAPTURE_SCALE = 2;
+
+// Chromium's canvas 2D backend silently fails to encode (canvas.toBlob()
+// resolves with `null` instead of throwing — see buildFile.ts's
+// canvasToPngBytes, and "Canvas failed to encode as PNG" in the wild) once a
+// canvas exceeds its real size limits: commonly cited as ~16384px on a side
+// and a ~268,435,456px² (16384²) total area, though the actual enforced
+// limit is GPU/driver-dependent and can be lower on some hardware — this bit
+// large accounts (500+ skins, 300+ champions) even though the computed
+// canvas stayed under the textbook Chromium ceiling. The thresholds below
+// are deliberately conservative — well under that ceiling — so there's real
+// margin for hardware that caps lower. See captureElementSafely.
+const SAFE_MAX_DIMENSION_PX = 8192;
+const SAFE_MAX_AREA_PX = 100_000_000;
+
+// Tier-2 fallback (see captureElementSafely): shrink the section's own CSS
+// width in bounded steps, letting its grid wrap into more rows instead —
+// same "give up width, not legibility" trade the user asked for. Floor
+// stays well above MIN_COLUMNS-territory (~4 cards wide) so a section never
+// gets absurdly narrow.
+const MIN_SHRINK_WIDTH_PX = 800;
+const WIDTH_SHRINK_FACTOR = 0.75;
+const MAX_SHRINK_ITERATIONS = 5;
 
 const IMAGE_TIMEOUT_MS = 8000;
 const FONT_TIMEOUT_MS = 4000;
@@ -189,22 +212,141 @@ async function waitForFonts(): Promise<void> {
 // by the DOM itself, so this doesn't meaningfully add to peak memory.
 const MAX_IMAGE_CACHE_SIZE = 10000;
 
-async function captureElement(el: HTMLElement): Promise<HTMLCanvasElement> {
+async function captureElement(el: HTMLElement, scale: number): Promise<HTMLCanvasElement> {
   // Matches the element's own rendered background rather than a hardcoded
   // guess, so a capture never shows a stray white/transparent edge.
   const backgroundColor = getComputedStyle(el).backgroundColor || '#171717';
   return html2canvas(el, {
-    scale: CAPTURE_SCALE,
+    scale,
     backgroundColor,
     logging: false,
     maxCacheSize: MAX_IMAGE_CACHE_SIZE,
   });
 }
 
+interface CaptureDimensions {
+  cssWidth: number;
+  cssHeight: number;
+  physicalWidth: number;
+  physicalHeight: number;
+  area: number;
+}
+
+function measure(el: HTMLElement, scale: number): CaptureDimensions {
+  const rect = el.getBoundingClientRect();
+  const physicalWidth = rect.width * scale;
+  const physicalHeight = rect.height * scale;
+  return {
+    cssWidth: rect.width,
+    cssHeight: rect.height,
+    physicalWidth,
+    physicalHeight,
+    area: physicalWidth * physicalHeight,
+  };
+}
+
+function isSafeToEncode(dims: CaptureDimensions): boolean {
+  return (
+    dims.physicalWidth <= SAFE_MAX_DIMENSION_PX &&
+    dims.physicalHeight <= SAFE_MAX_DIMENSION_PX &&
+    dims.area <= SAFE_MAX_AREA_PX
+  );
+}
+
+/**
+ * Captures `el` and encodes it straight to PNG bytes, automatically
+ * degrading quality rather than letting "Canvas failed to encode as PNG"
+ * reach the user — large accounts (500+ skins, 300+ champions) can produce
+ * canvases past Chromium's real-world size limits (see SAFE_MAX_DIMENSION_PX
+ * / SAFE_MAX_AREA_PX above). Three escalating tiers, cheapest first:
+ *
+ *   1. Measure at the normal 2x capture scale. If that's already safe,
+ *      nothing changes.
+ *   2. Drop to 1x scale and re-measure.
+ *   3. Still unsafe at 1x (the section's CSS size itself is too large, not
+ *      just the scale) — shrink the section's own width in bounded steps,
+ *      which forces its grid to wrap into more rows instead of running
+ *      wider (same "give up width, not card size" trade as everywhere
+ *      else in export). Mutates `el.style.width` directly, which is safe
+ *      here because these are off-screen, capture-only elements (see
+ *      ExportCaptureTree's doc comment) — always restored in `finally`.
+ *
+ * If encoding still somehow fails after all three tiers (the real
+ * GPU/driver limit turned out lower than our own conservative thresholds),
+ * one last retry at half the scale is attempted before finally giving up —
+ * by that point failure should be practically impossible for any real
+ * account.
+ *
+ * `degraded` tells the caller whether any of this actually fired, so the UI
+ * can surface a "reduced quality" note instead of a silently smaller image.
+ */
+async function captureElementSafely(
+  el: HTMLElement,
+  sectionLabel: string,
+): Promise<{ bytes: Uint8Array; degraded: boolean }> {
+  const originalWidth = el.style.width;
+
+  try {
+    let scale = CAPTURE_SCALE;
+    let degraded = false;
+    let dims = measure(el, scale);
+
+    if (!isSafeToEncode(dims)) {
+      scale = 1;
+      degraded = true;
+      dims = measure(el, scale);
+    }
+
+    let iterations = 0;
+    while (!isSafeToEncode(dims) && iterations < MAX_SHRINK_ITERATIONS) {
+      const nextWidth = Math.max(MIN_SHRINK_WIDTH_PX, dims.cssWidth * WIDTH_SHRINK_FACTOR);
+      if (nextWidth >= dims.cssWidth) break; // floor already reached, no point looping further
+      el.style.width = `${nextWidth}px`;
+      await nextFrame();
+      degraded = true;
+      dims = measure(el, scale);
+      iterations++;
+    }
+
+    if (!isSafeToEncode(dims)) {
+      console.warn(
+        `[export] ${sectionLabel}: still over the safe canvas size after every automatic downgrade (${Math.round(dims.physicalWidth)}x${Math.round(dims.physicalHeight)}) — attempting capture anyway`,
+      );
+    }
+
+    console.info(
+      `[export] ${sectionLabel}: capturing at scale ${scale} -> ${Math.round(dims.physicalWidth)}x${Math.round(dims.physicalHeight)} = ${Math.round(dims.area).toLocaleString('en-US')}px²${degraded ? ' (auto-reduced)' : ''}`,
+    );
+
+    try {
+      const canvas = await captureElement(el, scale);
+      const bytes = await canvasToPngBytes(canvas);
+      return { bytes, degraded };
+    } catch (err) {
+      console.warn(
+        `[export] ${sectionLabel}: capture/encode failed at scale ${scale} despite passing size checks, retrying at half scale:`,
+        err,
+      );
+      const fallbackScale = Math.max(0.5, scale / 2);
+      const canvas = await captureElement(el, fallbackScale);
+      const bytes = await canvasToPngBytes(canvas);
+      return { bytes, degraded: true };
+    }
+  } finally {
+    // Always restore, success or failure — this element stays mounted for
+    // the app's whole session (see ExportCaptureTree), so a later export
+    // must start from the real intended width, not whatever a previous
+    // export shrank it to.
+    el.style.width = originalWidth;
+  }
+}
+
 export interface CapturedSection {
   key: string;
   label: string;
-  canvas: HTMLCanvasElement;
+  pngBytes: Uint8Array;
+  /** Whether this section's quality was automatically reduced to stay under Chromium's canvas size limits — see captureElementSafely. */
+  degraded: boolean;
 }
 
 /**
@@ -250,7 +392,8 @@ export async function captureReportSections(
     await waitForImagesToSettle(el, label, (done, total) => onImageProgress?.(done, total, label));
 
     onSectionProgress?.(i, sectionEls.length, label);
-    results.push({ key, label, canvas: await captureElement(el) });
+    const { bytes, degraded } = await captureElementSafely(el, label);
+    results.push({ key, label, pngBytes: bytes, degraded });
   }
   onSectionProgress?.(sectionEls.length, sectionEls.length, '');
 

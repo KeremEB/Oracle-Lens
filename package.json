@@ -1,6 +1,6 @@
 {
   "name": "oracle-lens",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-only inventory and stats viewer for your own Riot Games accounts.",
   "main": "dist/main/index.js",
   "scripts": {
