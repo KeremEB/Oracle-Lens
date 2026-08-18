@@ -59,14 +59,23 @@ snapshots of accounts you've already viewed — display data only, never credent
 ### Profile icons
 ![Profile icons](screenshots/icons.png)
 
+### Classic
+![Classic](screenshots/classic.png)
+
 ### Loot
 ![Loot](screenshots/loot.png)
+
+### History
+![History](screenshots/history.png)
+
+### Notes
+![Notes](screenshots/notes.png)
 
 ### Waiting for the client
 ![Waiting screen](screenshots/waiting.png)
 
-### Export output
-![Export output](screenshots/export.png)
+### Connecting to the client
+![Connecting screen](screenshots/connect.png)
 
 </details>
 
